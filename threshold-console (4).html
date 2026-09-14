@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จุดตัดสัญญาณ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0F1A;
+    --panel:#0F1830;
+    --panel-2:#0C1426;
+    --border:#1E2B47;
+    --grid:#152036;
+    --text:#E7ECF5;
+    --muted:#7C8AA5;
+    --signal:#34D399;
+    --signal-dim:#1F5240;
+    --sweep:#FBBF24;
+    --danger:#F87171;
+    --danger-dim:#5A2E31;
+    --neg:#5B6B8C;
+    --pr:#60A5FA;
+    --pr-dim:#1E3A5F;
+    --truth-neg:#FB923C;
+    --truth-pos:#C084FC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"IBM Plex Sans Thai","IBM Plex Sans",sans-serif;
+    padding:28px 16px 40px;
+    min-height:100vh;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+  .mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:16px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--border);
+    padding-bottom:16px;
+    margin-bottom:20px;
+  }
+  h1{
+    font-size:23px;
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:0.2px;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+    max-width:56ch;
+    line-height:1.55;
+  }
+  .tau-readout{
+    text-align:right;
+    flex-shrink:0;
+  }
+  .tau-readout .val{
+    font-size:34px;
+    color:var(--sweep);
+    line-height:1;
+  }
+  .tau-readout .lbl{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:4px;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:20px;
+    margin-bottom:16px;
+    position:relative;
+  }
+  .panel::before, .panel::after{
+    content:"";
+    position:absolute;
+    width:6px;height:6px;
+    border:1px solid var(--border);
+    top:-1px;
+  }
+  .panel::before{left:-1px;border-right:none;border-bottom:none;}
+  .panel::after{right:-1px;border-left:none;border-bottom:none;}
+
+  .strip-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:14px;
+  }
+  .strip-head h2{font-size:13px;font-weight:500;margin:0;color:var(--muted);}
+  .sync{font-size:12px;color:var(--muted);}
+  .sync .dot{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--signal);margin-right:6px;position:relative;top:-1px;
+    transition:background .3s;
+  }
+  .sync.stale .dot{background:var(--muted);}
+
+  .strip{
+    position:relative;
+    height:176px;
+    border-bottom:1px solid var(--grid);
+    margin-bottom:8px;
+  }
+  .blip-layer{
+    position:absolute;inset:0;
+    display:flex;align-items:flex-end;gap:1px;
+  }
+  .blip-col{
+    flex:1 1 0;min-width:0;
+    display:flex;flex-direction:column-reverse;align-items:center;gap:1px;
+  }
+  .strip .axis-tick{
+    position:absolute;bottom:-18px;font-size:11px;color:var(--muted);
+    transform:translateX(-50%);
+  }
+  .blip{
+    flex:0 0 auto;
+    width:10px;height:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:700;line-height:1;
+    transition:background-color .18s ease, color .18s ease, opacity .18s ease;
+  }
+  .blip.blip-hidden{display:none;}
+  /* shape = ความจริง: จุดกลม = ไม่ใช่เป้าหมาย, กากบาท = ใช่เป้าหมายจริง */
+  .blip.dot{border-radius:50%;}
+  .blip.cross{background:transparent;}
+  /* color = คำทำนายของโมเดล ณ เกณฑ์ปัจจุบัน: ฟ้า = ทำนาย "ใช่", เทา = ทำนาย "ไม่ใช่" */
+  .blip.dot.pred-pos{background:var(--pr);box-shadow:0 0 7px 0 rgba(96,165,250,.55);}
+  .blip.dot.pred-neg{background:var(--neg);opacity:.5;}
+  .blip.cross.pred-pos{color:var(--pr);text-shadow:0 0 7px rgba(96,165,250,.65);}
+  .blip.cross.pred-neg{color:var(--neg);opacity:.85;}
+  .overflow-label{font-size:9px;color:var(--muted);margin-bottom:1px;}
+
+  .threshold-line{
+    position:absolute;
+    top:-6px;bottom:-6px;
+    width:2px;
+    background:var(--sweep);
+    box-shadow:0 0 6px 1px rgba(251,191,36,.6);
+    transform:translateX(-1px);
+    transition:left .12s linear;
+    z-index:2;
+  }
+
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:14px;
+    background:var(--border);
+    margin:22px 0 8px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:26px;height:26px;
+    margin-top:-6px;
+    border-radius:50%;
+    background:#FFFFFF;
+    border:none;
+    cursor:grab;
+    box-shadow:0 2px 6px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.12);
+  }
+  input[type=range]::-moz-range-track{
+    height:14px;border-radius:7px;background:transparent;border:none;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:26px;height:26px;border-radius:50%;
+    background:#FFFFFF;border:none;cursor:grab;
+    box-shadow:0 2px 6px rgba(0,0,0,.45);
+  }
+  .legend{
+    display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+    margin-top:22px;font-size:12px;color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend .swatch{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .legend .swatch.pred-pos{background:var(--pr);}
+  .legend .swatch.pred-neg{background:var(--neg);opacity:.7;}
+  .legend .shape-dot{width:9px;height:9px;border-radius:50%;background:var(--muted);display:inline-block;}
+  .legend .shape-cross{font-size:12px;font-weight:700;color:var(--muted);}
+  .legend-note{
+    font-size:11.5px;color:var(--muted);line-height:1.7;
+    margin:10px 0 0;
+  }
+  .legend-note b{color:var(--text);font-weight:500;}
+
+  /* ---- data-mode toggle ---- */
+  .mode-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .mode-btn{
+    flex:1 1 220px;
+    text-align:left;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--muted);
+    padding:10px 14px;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:13px;
+    transition:border-color .2s ease, background .2s ease, color .2s ease;
+  }
+  .mode-btn:hover{border-color:var(--neg);}
+  .mode-btn .mode-sub{
+    display:block;margin-top:4px;font-size:11px;
+    font-family:"IBM Plex Mono",monospace;color:var(--muted);
+  }
+  .mode-btn.active{
+    border-color:var(--sweep);
+    color:var(--text);
+    background:rgba(251,191,36,.08);
+  }
+  .mode-btn.active .mode-sub{color:var(--sweep);}
+  .mode-desc{font-size:12px;color:var(--muted);margin:0;line-height:1.6;}
+  .mode-desc b{color:var(--text);font-weight:500;}
+
+  .grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;}
+  @media (max-width:680px){.grid2{grid-template-columns:1fr;}}
+
+  .roc-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:8px;}
+  .roc-title h2{font-size:13px;font-weight:500;margin:0;color:var(--muted);}
+  .roc-title .auc{font-size:13px;color:var(--text);white-space:nowrap;}
+  .roc-title .auc b{color:var(--signal);font-weight:600;}
+  .roc-title .auc.pr b{color:var(--pr);}
+
+  .coord{
+    text-align:center;font-size:12px;color:var(--sweep);
+    margin:-2px 0 6px;
+  }
+
+  svg.roc{width:100%;height:auto;display:block;}
+  .roc-axis-label{font-size:9px;fill:var(--muted);font-family:"IBM Plex Mono",monospace;}
+
+  .curve-note{
+    font-size:12px;color:var(--muted);line-height:1.65;
+    margin:12px 0 0;padding-top:10px;border-top:1px solid var(--border);
+  }
+  .curve-note b{color:var(--text);font-weight:500;}
+
+  .cm-title{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 14px;}
+  .cm-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;
+  }
+  .cell{
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:10px 12px;
+    background:var(--panel-2);
+  }
+  .cell .n{font-size:24px;line-height:1;}
+  .cell .cap{font-size:11px;color:var(--muted);margin-top:6px;}
+  .cell.tp .n{color:var(--signal);}
+  .cell.fp .n, .cell.fn .n{color:var(--danger);}
+  .cell.tn .n{color:var(--neg);}
+
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;}
+  .metric{border-top:1px solid var(--border);padding-top:8px;}
+  .metric .num{font-size:20px;}
+  .metric .name{font-size:11px;color:var(--muted);margin-top:2px;}
+  .metric .sub{font-size:10.5px;color:var(--muted);opacity:.75;margin-top:3px;line-height:1.45;}
+  .metric.primary .num{font-size:26px;color:var(--sweep);}
+
+  /* ---- static "sorted by truth" illustration for the AUC explainer ---- */
+  .truth-strip{
+    display:flex;align-items:flex-end;gap:1px;
+    height:128px;
+    border-bottom:1px solid var(--grid);
+  }
+  .truth-col{
+    flex:1 1 0;min-width:0;
+    display:flex;flex-direction:column-reverse;align-items:center;gap:1px;
+  }
+  .truth-blip{flex:0 0 auto;width:7px;height:7px;}
+  .truth-blip.neg{border-radius:50%;background:var(--truth-neg);}
+  .truth-blip.pos{
+    border-radius:2px;background:var(--truth-pos);
+    display:flex;align-items:center;justify-content:center;
+    font-size:5px;font-weight:800;color:#2B1140;
+  }
+  .truth-axis{
+    display:flex;justify-content:space-between;
+    font-size:11px;color:var(--muted);margin-top:6px;
+  }
+
+  /* ---- insight callout ---- */
+  .insight-panel{border-left:3px solid var(--sweep);}
+  .insight-panel h2{font-size:13px;font-weight:500;margin:0 0 10px;color:var(--text);}
+  .insight-panel p{font-size:13px;color:var(--muted);line-height:1.75;margin:0;}
+  .insight-panel b{color:var(--text);font-weight:500;}
+
+  /* ---- multiclass / OvO section ---- */
+  .multiclass-panel h2{font-size:14px;font-weight:600;margin:0 0 8px;color:var(--text);}
+  .multiclass-panel > p.intro{font-size:13px;color:var(--muted);line-height:1.75;margin:0 0 18px;max-width:74ch;}
+  .ovr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  @media (max-width:680px){.ovr-grid{grid-template-columns:1fr;}}
+  .ovr-card{
+    border:1px solid var(--border);border-radius:6px;
+    padding:16px 14px;background:var(--panel-2);text-align:center;
+  }
+  .ovr-round{font-size:11px;color:var(--muted);margin-bottom:10px;font-family:"IBM Plex Mono",monospace;}
+  .ovr-classes{display:flex;justify-content:center;gap:8px;margin-bottom:12px;}
+  .ovr-dot{
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+    border:1.5px solid var(--border);
+    background:var(--panel);
+    opacity:.5;
+    transition:all .2s ease;
+  }
+  .ovr-dot.active{
+    background:var(--signal-dim);
+    border-color:var(--signal);
+    opacity:1;
+    box-shadow:0 0 10px rgba(52,211,153,.35);
+  }
+  .ovr-dot.excluded{opacity:.22;filter:grayscale(1);}
+  .ovr-eq{font-size:12.5px;color:var(--text);line-height:1.6;margin-bottom:10px;}
+  .ovr-eq .vs{color:var(--muted);margin:0 2px;}
+  .ovr-mini{display:block;margin:0 auto;}
+  .ovr-mini-cap{font-size:10px;color:var(--muted);margin-top:4px;}
+  .ovr-note{
+    font-size:12px;color:var(--muted);line-height:1.75;margin:0;
+    padding-top:14px;border-top:1px solid var(--border);max-width:74ch;
+  }
+
+  footer{font-size:12px;color:var(--muted);line-height:1.6;padding-top:6px;}
+  footer b{color:var(--text);font-weight:500;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>จุดตัดสัญญาณ</h1>
+      <p>ลากเกณฑ์ (τ) เพื่อดูว่าจุดไหนกลายเป็นเป้าหมายที่จับได้ จุดไหนเป็นสัญญาณเตือนหลอก — เกณฑ์นี้ใช้ร่วมกัน ทุกคนที่เปิดหน้านี้เห็นและขยับเข็มเดียวกัน</p>
+    </div>
+    <div class="tau-readout">
+      <div class="val mono" id="tauVal">0.500</div>
+      <div class="lbl">τ · เกณฑ์การตัดสิน</div>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="strip-head">
+      <h2>โหมดชุดข้อมูล</h2>
+    </div>
+    <div class="mode-toggle" id="modeToggle">
+      <button type="button" class="mode-btn active" data-mode="balanced" aria-pressed="true">
+        ข้อมูลสมดุล (Balanced)
+        <span class="mode-sub">เป้าหมายจริง ≈ 50%</span>
+      </button>
+      <button type="button" class="mode-btn" data-mode="imbalanced" aria-pressed="false">
+        ข้อมูลเบ้สูง (Imbalanced)
+        <span class="mode-sub">เป้าหมายจริง ≈ 1% / พื้นหลัง 99%</span>
+      </button>
+    </div>
+    <p class="mode-desc" id="modeDesc">ชุดข้อมูลตอนนี้: <b id="modeCount">42</b> จุดตรวจจับ</p>
+  </div>
+
+  <div class="panel">
+    <div class="strip-head">
+      <h2>แถบสัญญาณ · <span id="stripCount">42</span> จุดตรวจจับ เรียงตามความน่าจะเป็น</h2>
+      <div class="sync" id="syncNote"><span class="dot"></span><span id="syncText">ซิงค์แล้ว</span></div>
+    </div>
+    <div class="strip" id="strip">
+      <div class="threshold-line" id="threshLine"></div>
+      <div class="blip-layer" id="blipLayer"></div>
+      <div class="axis-tick" style="left:0%">0.0</div>
+      <div class="axis-tick" style="left:50%">0.5</div>
+      <div class="axis-tick" style="left:100%">1.0</div>
+    </div>
+    <input type="range" id="slider" min="0" max="1" step="0.005" value="0.5">
+    <div class="legend">
+      <span><i class="swatch pred-pos"></i>สีฟ้า = โมเดลทำนายว่า “ใช่”</span>
+      <span><i class="swatch pred-neg"></i>สีเทา = โมเดลทำนายว่า “ไม่ใช่”</span>
+      <span><i class="shape-dot"></i>● = ความจริงคือ “ไม่ใช่”</span>
+      <span><i class="shape-cross">✕</i> = ความจริงคือ “ใช่”</span>
+    </div>
+    <p class="legend-note">รวมสีกับรูปทรงเข้าด้วยกัน: <b>✕ สีฟ้า</b> = จับเป้าหมายได้ถูก (TP) · <b>● สีฟ้า</b> = แจ้งเตือนหลอก (FP) · <b>✕ สีเทา</b> = พลาดเป้าหมาย (FN) · <b>● สีเทา</b> = เพิกเฉยถูกต้อง (TN)</p>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="roc-title">
+        <h2>เส้นโค้ง ROC</h2>
+        <div class="auc mono">AUC <b id="aucVal">–</b></div>
+      </div>
+      <div class="coord mono" id="rocCoord">(FPR 0.00, TPR 0.00)</div>
+      <svg class="roc" id="rocSvg" viewBox="0 0 300 240"></svg>
+      <p class="curve-note">แกน Y (<b>TPR</b>) คือสัดส่วนที่จับเป้าหมายจริงได้ถูกต้อง (ค่าเดียวกับ Recall) แกน X (<b>FPR</b>) คือสัดส่วนที่แจ้งเตือนผิดจากของที่ไม่ใช่เป้าหมาย พื้นที่แรเงาคือ AUC เส้นประคือเส้น "เดามั่ว" (AUC = 0.5) — อธิบาย AUC แบบเข้าใจง่ายอยู่ในกล่องด้านล่างสุด</p>
+    </div>
+    <div class="panel">
+      <div class="roc-title">
+        <h2>เส้นโค้ง Precision-Recall</h2>
+        <div class="auc pr mono">PR-AUC <b id="apVal">–</b></div>
+      </div>
+      <div class="coord mono" id="prCoord">(Recall 0.00, Precision 0.00)</div>
+      <svg class="roc" id="prSvg" viewBox="0 0 300 240"></svg>
+      <p class="curve-note">แกน Y (<b>Precision</b>) คือเมื่อแจ้งเตือนแล้ว แม่นจริงกี่% แกน X (<b>Recall</b>) คือจับเป้าหมายจริงได้ครบแค่ไหน เส้นประคือเส้นฐาน "เดามั่ว" ซึ่งเท่ากับสัดส่วนเป้าหมายจริงในข้อมูลทั้งหมด — ยิ่งข้อมูลเบ้ เส้นฐานนี้ยิ่งอยู่ต่ำ</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 style="font-size:14px;font-weight:600;margin:0 0 10px;color:var(--text);">AUC จริง ๆ แล้ววัดอะไร?</h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.75;margin:0 0 16px;max-width:76ch;">
+      ลองจับคู่แบบสุ่ม: หยิบตัวอย่าง <b style="color:var(--text);font-weight:500;">เชิงลบ (ของปลอม)</b> มา 1 อัน กับ <b style="color:var(--text);font-weight:500;">เชิงบวก (ของจริง)</b> มา 1 อัน แล้วถามว่า "โมเดลให้คะแนนของจริงสูงกว่าของปลอมไหม" — <b style="color:var(--text);font-weight:500;">AUC คือความน่าจะเป็นที่คำตอบจะเป็น "ใช่"</b> เมื่อลองจับคู่แบบนี้ซ้ำ ๆ กับทุกคู่ที่เป็นไปได้ โดย<b style="color:var(--text);font-weight:500;">ไม่ต้องมีเกณฑ์ (τ) เข้ามาเกี่ยวข้องเลย</b> แถวด้านล่างคือข้อมูลทั้งหมดเรียงตามคะแนนที่โมเดลให้ (ไม่มีเส้นตัดเกณฑ์ใด ๆ) — ถ้าจุดสีม่วง (ของจริง) ส่วนใหญ่กระจุกอยู่ทางขวา ห่างจากจุดสีส้ม (ของปลอม) ที่กระจุกทางซ้าย แปลว่าโมเดลจัดอันดับได้ดี AUC ก็จะสูงตามไปด้วย
+    </p>
+    <div class="truth-strip" id="truthStrip"></div>
+    <div class="truth-axis"><span>0.0</span><span>0.2</span><span>0.4</span><span>0.6</span><span>0.8</span><span>1.0</span></div>
+    <div class="legend" style="margin-top:14px;">
+      <span><i class="swatch" style="background:var(--truth-neg);border-radius:50%;width:9px;height:9px;display:inline-block;"></i>● = ตัวอย่างเชิงลบจริง (ของปลอม)</span>
+      <span><i class="swatch" style="background:var(--truth-pos);border-radius:2px;width:9px;height:9px;display:inline-block;"></i>✕ = ตัวอย่างเชิงบวกจริง (ของจริง)</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <p class="cm-title">ตาราง Confusion ที่ τ ปัจจุบัน</p>
+      <div class="cm-grid">
+        <div class="cell tp"><div class="n mono" id="cTP">–</div><div class="cap">พบเป้าหมายจริง</div></div>
+        <div class="cell fp"><div class="n mono" id="cFP">–</div><div class="cap">แจ้งเตือนหลอก</div></div>
+        <div class="cell fn"><div class="n mono" id="cFN">–</div><div class="cap">พลาดเป้าหมาย</div></div>
+        <div class="cell tn"><div class="n mono" id="cTN">–</div><div class="cap">เพิกเฉยถูกต้อง</div></div>
+      </div>
+      <div class="metrics">
+        <div class="metric primary">
+          <div class="num mono" id="mRecall">–</div>
+          <div class="name">Recall (TPR)</div>
+          <div class="sub">จับเป้าหมายจริงได้ครบกี่% จากที่มีอยู่จริงทั้งหมด</div>
+        </div>
+        <div class="metric primary">
+          <div class="num mono" id="mAcc">–</div>
+          <div class="name">Accuracy</div>
+          <div class="sub">ทายถูกโดยรวมกี่% (นับทั้งบวกและลบ)</div>
+        </div>
+        <div class="metric">
+          <div class="num mono" id="mPrec">–</div>
+          <div class="name">Precision</div>
+          <div class="sub">เมื่อแจ้งเตือนแล้ว แม่นจริงกี่%</div>
+        </div>
+        <div class="metric primary">
+          <div class="num mono" id="mF1">–</div>
+          <div class="name">F1-score</div>
+          <div class="sub">เลขเดียวที่รวม Precision กับ Recall เข้าด้วยกัน</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel insight-panel">
+      <h2>ทำไม ROC อาจ "หลอกตา" เมื่อข้อมูลเบ้?</h2>
+      <p id="insightText">กำลังคำนวณ…</p>
+    </div>
+  </div>
+
+  <div class="panel multiclass-panel">
+    <h2>ถ้ามีมากกว่า 2 กลุ่มล่ะ? แนวคิด One-vs-One (OvO)</h2>
+    <p class="intro">เกม "ลากเกณฑ์ดูกราฟ ROC" ที่เล่นกันมาทั้งหน้านี้ ตอบได้แค่คำถาม 2 ทางเลือก (ใช่ / ไม่ใช่) เท่านั้น ทีนี้ลองสมมุติว่าสัญญาณที่ตรวจจับได้ ไม่ได้มีแค่ "ใช่เป้าหมาย" กับ "ไม่ใช่" แต่ต้องแยกเป็น 3 ระดับ คือ <b style="color:var(--text)">🟢 ปลอดภัย</b>, <b style="color:var(--text)">🟡 เฝ้าระวัง</b> และ <b style="color:var(--text)">🔴 อันตราย</b> — วาดกราฟ ROC เส้นเดียวตอบไม่ได้อีกต่อไป เพราะ ROC รู้จักแค่ "ใช่" กับ "ไม่ใช่"</p>
+    <p class="intro"><b style="color:var(--text)">ทางแก้แบบ One-vs-One (OvO):</b> แทนที่จะเอา 2 กลุ่มที่เหลือมา "รวมกัน" เป็นฝ่ายเดียวแบบ OvR เราเลือก <b style="color:var(--text)">จับคู่ทีละ 2 กลุ่ม</b> แล้ว<b style="color:var(--text)">ตัดกลุ่มที่ 3 ออกไปเลยชั่วคราว</b> (ไม่นับในรอบนั้น ไม่ใช่เอาไปรวม) ทำแบบนี้ให้ครบทุกคู่ที่เป็นไปได้ — นี่คือที่มาของชื่อ <b style="color:var(--text)">One-vs-One</b> (กลุ่มหนึ่ง ปะทะ อีกกลุ่มหนึ่งแบบตัวต่อตัว)</p>
+
+    <div class="ovr-grid">
+      <div class="ovr-card">
+        <div class="ovr-round">คู่ที่ 1 — ปลอดภัย ปะทะ เฝ้าระวัง</div>
+        <div class="ovr-classes">
+          <span class="ovr-dot active">🟢</span>
+          <span class="ovr-dot active">🟡</span>
+          <span class="ovr-dot excluded">🔴</span>
+        </div>
+        <div class="ovr-eq">🟢 ปลอดภัย <span class="vs">ปะทะ</span> 🟡 เฝ้าระวัง <span style="color:var(--muted);font-size:11px;">(ตัด 🔴 ออกชั่วคราว)</span></div>
+        <svg class="ovr-mini" viewBox="0 0 100 46" width="100%" height="40">
+          <line x1="4" y1="42" x2="96" y2="4" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <path d="M4,42 C14,14 34,6 96,4" fill="none" style="stroke:var(--signal)" stroke-width="2"/>
+        </svg>
+        <div class="ovr-mini-cap">→ เส้น ROC เฉพาะคู่นี้</div>
+      </div>
+      <div class="ovr-card">
+        <div class="ovr-round">คู่ที่ 2 — ปลอดภัย ปะทะ อันตราย</div>
+        <div class="ovr-classes">
+          <span class="ovr-dot active">🟢</span>
+          <span class="ovr-dot excluded">🟡</span>
+          <span class="ovr-dot active">🔴</span>
+        </div>
+        <div class="ovr-eq">🟢 ปลอดภัย <span class="vs">ปะทะ</span> 🔴 อันตราย <span style="color:var(--muted);font-size:11px;">(ตัด 🟡 ออกชั่วคราว)</span></div>
+        <svg class="ovr-mini" viewBox="0 0 100 46" width="100%" height="40">
+          <line x1="4" y1="42" x2="96" y2="4" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <path d="M4,42 C20,24 44,10 96,4" fill="none" style="stroke:var(--signal)" stroke-width="2"/>
+        </svg>
+        <div class="ovr-mini-cap">→ เส้น ROC เฉพาะคู่นี้</div>
+      </div>
+      <div class="ovr-card">
+        <div class="ovr-round">คู่ที่ 3 — เฝ้าระวัง ปะทะ อันตราย</div>
+        <div class="ovr-classes">
+          <span class="ovr-dot excluded">🟢</span>
+          <span class="ovr-dot active">🟡</span>
+          <span class="ovr-dot active">🔴</span>
+        </div>
+        <div class="ovr-eq">🟡 เฝ้าระวัง <span class="vs">ปะทะ</span> 🔴 อันตราย <span style="color:var(--muted);font-size:11px;">(ตัด 🟢 ออกชั่วคราว)</span></div>
+        <svg class="ovr-mini" viewBox="0 0 100 46" width="100%" height="40">
+          <line x1="4" y1="42" x2="96" y2="4" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+          <path d="M4,42 C24,30 54,16 96,4" fill="none" style="stroke:var(--signal)" stroke-width="2"/>
+        </svg>
+        <div class="ovr-mini-cap">→ เส้น ROC เฉพาะคู่นี้</div>
+      </div>
+    </div>
+
+    <p class="ovr-note"><b style="color:var(--text)">OvO vs OvR ต่างกันตรงไหน:</b> OvO ไม่เอา 2 กลุ่มไปรวมกันเป็น "ฝ่ายที่เหลือ" เหมือน OvR เลยไม่เสียลักษณะเฉพาะของแต่ละกลุ่ม และไม่เกิดปัญหาข้อมูลเบ้จากการรวมกลุ่ม (เช่น รวม 🟡+🔴 เป็นฝ่ายเดียวอาจทำให้สัดส่วนเพี้ยนไปจากของจริง) แต่ข้อเสียคือจำนวนคู่ที่ต้องคำนวณเพิ่มเร็วกว่ามากเมื่อมีหลายกลุ่ม (สูตรคือ k(k-1)/2 คู่) — กรณีนี้มี 3 กลุ่มพอดี เลยคำนวณแค่ 3 คู่ เท่ากับจำนวนรอบของ OvR แต่ถ้ามี 10 กลุ่ม OvO ต้องคำนวณถึง 45 คู่ ในขณะที่ OvR คำนวณแค่ 10 รอบเท่านั้น สุดท้ายพอได้ ROC มาหลายคู่ ก็นำ AUC ของทุกคู่มาเฉลี่ยรวมกัน (<b style="color:var(--text)">Macro-average</b>) เพื่อสรุปเป็นตัวเลขเดียวเหมือนเดิม</p>
+  </div>
+
+  <footer>
+    <b>ข้อมูลที่ใช้ร่วมกัน:</b> ตำแหน่งเกณฑ์ (τ) และโหมดชุดข้อมูลจะถูกบันทึกแบบสาธารณะ ผู้ที่เปิดหน้านี้คนอื่นจะเห็นค่าเดียวกับที่คุณตั้งไว้ และถ้าพวกเขาขยับ คุณจะเห็นมันเปลี่ยนตามภายในไม่กี่วินาที
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  // ================= deterministic PRNG (mulberry32) =================
+  function mulberry32(seed){
+    return function(){
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // ================= datasets: {p: predicted probability, y: true label 1=target 0=clutter} =================
+  var DATA_BALANCED = [
+    {p:0.120,y:0},{p:0.169,y:0},{p:0.219,y:0},{p:0.219,y:0},{p:0.240,y:0},
+    {p:0.265,y:1},{p:0.265,y:1},{p:0.287,y:0},{p:0.291,y:0},{p:0.295,y:1},
+    {p:0.304,y:0},{p:0.306,y:0},{p:0.335,y:0},{p:0.339,y:1},{p:0.346,y:0},
+    {p:0.417,y:0},{p:0.418,y:0},{p:0.441,y:0},{p:0.494,y:1},{p:0.531,y:0},
+    {p:0.535,y:1},{p:0.541,y:0},{p:0.576,y:0},{p:0.583,y:1},{p:0.608,y:1},
+    {p:0.621,y:0},{p:0.631,y:1},{p:0.645,y:1},{p:0.645,y:1},{p:0.653,y:1},
+    {p:0.655,y:0},{p:0.685,y:1},{p:0.751,y:1},{p:0.752,y:1},{p:0.762,y:1},
+    {p:0.774,y:1},{p:0.786,y:1},{p:0.789,y:0},{p:0.844,y:1},{p:0.935,y:1},
+    {p:0.955,y:1},{p:0.973,y:1}
+  ];
+
+  // ~99% negative / 1% positive, generated with a fixed seed so every visitor
+  // sees the exact same "highly imbalanced" scenario.
+  function generateImbalanced(){
+    var rand = mulberry32(42);
+    var data = [];
+    var nNeg = 297, nPos = 3;
+    for (var i=0;i<nNeg;i++){
+      var u = rand();
+      var score = Math.pow(u, 3) * 0.95; // heavy skew toward low scores, long tail up
+      data.push({p: +Math.min(0.97, score).toFixed(3), y:0});
+    }
+    for (var j=0;j<nPos;j++){
+      var u2 = rand();
+      var score2 = 0.42 + 0.55 * (1 - Math.pow(u2, 1.6)); // skewed toward high scores
+      data.push({p: +Math.min(0.985, score2).toFixed(3), y:1});
+    }
+    data.sort(function(a,b){ return a.p - b.p; });
+    return data;
+  }
+
+  var DATA_SETS = { balanced: DATA_BALANCED, imbalanced: generateImbalanced() };
+
+  // ================= confusion / metrics helpers (accept a dataset) =================
+  function confusionAt(data, tau){
+    var tp=0,fp=0,fn=0,tn=0;
+    for (var i=0;i<data.length;i++){
+      var d = data[i];
+      var pred = d.p >= tau ? 1 : 0;
+      if (pred===1 && d.y===1) tp++;
+      else if (pred===1 && d.y===0) fp++;
+      else if (pred===0 && d.y===1) fn++;
+      else tn++;
+    }
+    return {tp:tp,fp:fp,fn:fn,tn:tn};
+  }
+
+  function metricsFrom(c){
+    var tp=c.tp, fp=c.fp, fn=c.fn, tn=c.tn;
+    var recall = (tp+fn)>0 ? tp/(tp+fn) : 0;
+    var precision = (tp+fp)>0 ? tp/(tp+fp) : 0;
+    var accuracy = (tp+fp+fn+tn)>0 ? (tp+tn)/(tp+fp+fn+tn) : 0;
+    var f1 = (precision+recall)>0 ? 2*precision*recall/(precision+recall) : 0;
+    var fpr = (fp+tn)>0 ? fp/(fp+tn) : 0;
+    return {recall:recall, precision:precision, accuracy:accuracy, f1:f1, fpr:fpr};
+  }
+
+  function trapArea(pts, xKey, yKey){
+    var area=0;
+    for (var i=1;i<pts.length;i++){
+      var a=pts[i-1], b=pts[i];
+      area += (b[xKey]-a[xKey]) * (a[yKey]+b[yKey]) / 2;
+    }
+    return area;
+  }
+
+  // sweep tau from 1 -> 0, building the ROC + PR points and their areas in one pass
+  function computeSweep(data){
+    var steps = 300;
+    var pts = [];
+    for (var i=0;i<=steps;i++){
+      var t = 1 - i/steps;
+      var c = confusionAt(data, t);
+      var recall = (c.tp+c.fn)>0 ? c.tp/(c.tp+c.fn) : 0;
+      var fpr = (c.fp+c.tn)>0 ? c.fp/(c.fp+c.tn) : 0;
+      // convention: when nothing is predicted positive yet, precision starts at 1
+      // so the PR curve begins cleanly at (recall 0, precision 1)
+      var precisionCurve = (c.tp+c.fp)>0 ? c.tp/(c.tp+c.fp) : 1;
+      pts.push({fpr:fpr, tpr:recall, recall:recall, precisionCurve:precisionCurve});
+    }
+    var posCount = data.filter(function(d){ return d.y===1; }).length;
+    return {
+      points: pts,
+      auc: trapArea(pts, 'fpr', 'tpr'),
+      ap: trapArea(pts, 'recall', 'precisionCurve'),
+      posRate: posCount / data.length
+    };
+  }
+
+  var SWEEP = { balanced: computeSweep(DATA_SETS.balanced), imbalanced: computeSweep(DATA_SETS.imbalanced) };
+
+  var currentMode = 'balanced';
+  var DATA = DATA_SETS[currentMode];
+
+  // ================= DOM refs =================
+  var strip = document.getElementById('strip');
+  var blipLayer = document.getElementById('blipLayer');
+  var threshLine = document.getElementById('threshLine');
+  var slider = document.getElementById('slider');
+  var tauVal = document.getElementById('tauVal');
+  var syncNote = document.getElementById('syncNote');
+  var syncText = document.getElementById('syncText');
+  var stripCountEl = document.getElementById('stripCount');
+  var modeToggle = document.getElementById('modeToggle');
+  var modeBtns = Array.prototype.slice.call(modeToggle.querySelectorAll('.mode-btn'));
+  var modeDescEl = document.getElementById('modeDesc');
+  var modeCountEl = document.getElementById('modeCount');
+  var rocSvg = document.getElementById('rocSvg');
+  var prSvg = document.getElementById('prSvg');
+  var aucValEl = document.getElementById('aucVal');
+  var apValEl = document.getElementById('apVal');
+  var rocCoordEl = document.getElementById('rocCoord');
+  var prCoordEl = document.getElementById('prCoord');
+  var insightText = document.getElementById('insightText');
+
+  var blipEls = [];
+  var rocCtx = null, prCtx = null;
+
+  function rebuildStrip(){
+    var NBINS = 30, CAP = 16;
+    var bins = [];
+    for (var i=0;i<NBINS;i++) bins.push([]);
+    DATA.forEach(function(d, i){
+      var idx = Math.min(NBINS-1, Math.floor(d.p*NBINS));
+      bins[idx].push(i); // keep the original DATA index
+    });
+    blipLayer.innerHTML = '';
+    blipEls = new Array(DATA.length);
+    bins.forEach(function(idxArr){
+      var col = document.createElement('div');
+      col.className = 'blip-col';
+      var shownCount = idxArr.length > CAP ? CAP - 1 : idxArr.length;
+      var hidden = idxArr.length - shownCount;
+      idxArr.forEach(function(dataIdx, pos){
+        var el = document.createElement('div');
+        el.className = 'blip';
+        if (pos >= shownCount) el.classList.add('blip-hidden'); // still updatable, just not shown
+        col.appendChild(el);
+        blipEls[dataIdx] = el;
+      });
+      if (hidden > 0){
+        var more = document.createElement('div');
+        more.className = 'overflow-label';
+        more.textContent = '+' + hidden;
+        col.appendChild(more);
+      }
+      blipLayer.appendChild(col);
+    });
+    stripCountEl.textContent = DATA.length;
+  }
+
+  // generic builder shared by the ROC and PR svg panels
+  function buildSvgCurve(svgEl, pts, cfg){
+    var W=300,H=240,padL=30,padB=26,padT=10,padR=10;
+    var plotW = W-padL-padR, plotH = H-padT-padB;
+    function X(v){ return padL + v*plotW; }
+    function Y(v){ return padT + (1-v)*plotH; }
+
+    svgEl.innerHTML = '';
+    var ns = 'http://www.w3.org/2000/svg';
+    function el(tag, attrs){
+      var e = document.createElementNS(ns, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+
+    // grid
+    for (var g=0; g<=4; g++){
+      var gx = padL + g/4*plotW, gy = padT + g/4*plotH;
+      svgEl.appendChild(el('line',{x1:gx,y1:padT,x2:gx,y2:padT+plotH,stroke:'#152036','stroke-width':1}));
+      svgEl.appendChild(el('line',{x1:padL,y1:gy,x2:padL+plotW,y2:gy,stroke:'#152036','stroke-width':1}));
+    }
+
+    // baseline: diagonal for ROC, horizontal "positive rate" line for PR
+    if (cfg.baseline === 'diagonal'){
+      svgEl.appendChild(el('line',{x1:X(0),y1:Y(0),x2:X(1),y2:Y(1),stroke:'#334467','stroke-width':1,'stroke-dasharray':'3,3'}));
+    } else {
+      var by = Y(cfg.baseline);
+      svgEl.appendChild(el('line',{x1:X(0),y1:by,x2:X(1),y2:by,stroke:'#334467','stroke-width':1,'stroke-dasharray':'3,3'}));
+    }
+
+    // shaded area under the curve
+    var areaD = 'M ' + X(pts[0][cfg.xKey]) + ' ' + Y(0);
+    pts.forEach(function(p){ areaD += ' L ' + X(p[cfg.xKey]) + ' ' + Y(p[cfg.yKey]); });
+    areaD += ' L ' + X(pts[pts.length-1][cfg.xKey]) + ' ' + Y(0) + ' Z';
+    svgEl.appendChild(el('path',{d:areaD, fill:cfg.color, opacity:'0.16', stroke:'none'}));
+
+    // curve line
+    var lineD = 'M ' + X(pts[0][cfg.xKey]) + ' ' + Y(pts[0][cfg.yKey]);
+    for (var i=1;i<pts.length;i++){ lineD += ' L ' + X(pts[i][cfg.xKey]) + ' ' + Y(pts[i][cfg.yKey]); }
+    svgEl.appendChild(el('path',{d:lineD, fill:'none', stroke:cfg.color, 'stroke-width':2}));
+
+    // axis labels
+    var lx = el('text', {x:padL+plotW/2, y:H-4, 'text-anchor':'middle', class:'roc-axis-label'});
+    lx.textContent = cfg.axisX;
+    svgEl.appendChild(lx);
+    var ly = el('text', {x:10, y:padT+plotH/2, 'text-anchor':'middle', class:'roc-axis-label', transform:'rotate(-90 10 '+(padT+plotH/2)+')'});
+    ly.textContent = cfg.axisY;
+    svgEl.appendChild(ly);
+
+    // moving marker (current threshold)
+    var marker = el('circle', {cx:X(pts[0][cfg.xKey]), cy:Y(pts[0][cfg.yKey]), r:5, fill:'#FBBF24', stroke:'#0A0F1A','stroke-width':1.5});
+    svgEl.appendChild(marker);
+
+    return {X:X, Y:Y, marker:marker};
+  }
+
+  // Static illustration for the AUC panel: NOT tied to the slider at all.
+  // Points are grouped into bins by score and stacked as a little bar per bin,
+  // colored/shaped only by their TRUE label (no prediction/threshold involved) —
+  // this is the point: AUC is about the overall ranking, not any one cut point.
+  var truthStripEl = document.getElementById('truthStrip');
+  function buildTruthStrip(data){
+    var NBINS = 25, CAP = 16;
+    var bins = [];
+    for (var i=0;i<NBINS;i++) bins.push([]);
+    data.forEach(function(d){
+      var idx = Math.min(NBINS-1, Math.floor(d.p*NBINS));
+      bins[idx].push(d);
+    });
+    truthStripEl.innerHTML = '';
+    bins.forEach(function(items){
+      var col = document.createElement('div');
+      col.className = 'truth-col';
+      var shown = items.length > CAP ? items.slice(0, CAP-1) : items;
+      var hidden = items.length - shown.length;
+      shown.forEach(function(d){
+        var b = document.createElement('div');
+        b.className = 'truth-blip ' + (d.y===1 ? 'pos' : 'neg');
+        if (d.y===1) b.textContent = '✕';
+        col.appendChild(b);
+      });
+      if (hidden > 0){
+        var more = document.createElement('div');
+        more.className = 'overflow-label';
+        more.textContent = '+' + hidden;
+        col.appendChild(more);
+      }
+      truthStripEl.appendChild(col);
+    });
+  }
+
+  function rebuildCurves(){
+    var sw = SWEEP[currentMode];
+    rocCtx = buildSvgCurve(rocSvg, sw.points, {xKey:'fpr', yKey:'tpr', color:'#34D399', axisX:'FPR →', axisY:'TPR →', baseline:'diagonal'});
+    prCtx = buildSvgCurve(prSvg, sw.points, {xKey:'recall', yKey:'precisionCurve', color:'#60A5FA', axisX:'Recall →', axisY:'Precision →', baseline: sw.posRate});
+    aucValEl.textContent = sw.auc.toFixed(3);
+    apValEl.textContent = sw.ap.toFixed(3);
+    buildTruthStrip(DATA);
+  }
+
+  function updateModeUI(){
+    modeBtns.forEach(function(b){
+      var active = b.dataset.mode === currentMode;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    var posCount = DATA.filter(function(d){ return d.y===1; }).length;
+    var pct = (posCount/DATA.length*100);
+    modeCountEl.textContent = DATA.length;
+    modeDescEl.innerHTML = 'ชุดข้อมูลตอนนี้: <b>' + DATA.length + '</b> จุดตรวจจับ · เป้าหมายจริง <b>' + posCount + '</b> จุด (' + pct.toFixed(1) + '%)';
+  }
+
+  function updateInsight(m){
+    var sw = SWEEP[currentMode];
+    if (currentMode === 'balanced'){
+      insightText.innerHTML = 'ตอนนี้ข้อมูล<b>สมดุล</b> (บวก≈ลบ) เส้น ROC (AUC <b>' + sw.auc.toFixed(3) + '</b>) กับเส้น Precision-Recall (PR-AUC <b>' + sw.ap.toFixed(3) + '</b>) เล่าเรื่องไปในทิศทางเดียวกัน ลองกดสลับไปที่ "ข้อมูลเบ้สูง" ด้านบน แล้วดูว่าเกิดอะไรขึ้น!';
+    } else {
+      insightText.innerHTML = 'ตอนนี้ข้อมูล<b>เบ้สูง</b> (เป้าหมายจริงมีแค่ ~1%) เส้น ROC ยังโชว์ AUC สูงถึง <b>' + sw.auc.toFixed(3) + '</b> เพราะ FPR คำนวณเทียบกับฐานลบที่มีเยอะมาก แต่ PR-AUC เหลือเพียง <b>' + sw.ap.toFixed(3) + '</b> — ที่เกณฑ์ปัจจุบัน Precision อยู่ที่แค่ <b>' + m.precision.toFixed(3) + '</b> แปลว่าถ้าเราแจ้งเตือนตามนี้ ส่วนใหญ่จะเป็น "เตือนหลอก" ไม่ใช่เป้าหมายจริง นี่คือเหตุผลที่ควรดู PR-Curve คู่กับ ROC เสมอเมื่อข้อมูลเบ้';
+    }
+  }
+
+  // ================= render at a given tau =================
+  var currentTau = 0.5;
+  function render(tau, animateLine){
+    currentTau = tau;
+    tauVal.textContent = tau.toFixed(3);
+    slider.value = tau;
+    threshLine.style.transition = animateLine ? 'left .5s cubic-bezier(.2,.7,.3,1)' : 'left .12s linear';
+    threshLine.style.left = (tau*100) + '%';
+
+    var c = confusionAt(DATA, tau);
+    var m = metricsFrom(c);
+
+    document.getElementById('cTP').textContent = c.tp;
+    document.getElementById('cFP').textContent = c.fp;
+    document.getElementById('cFN').textContent = c.fn;
+    document.getElementById('cTN').textContent = c.tn;
+    document.getElementById('mRecall').textContent = (m.recall*100).toFixed(1) + '%';
+    document.getElementById('mAcc').textContent = (m.accuracy*100).toFixed(1) + '%';
+    document.getElementById('mPrec').textContent = (m.precision*100).toFixed(1) + '%';
+    document.getElementById('mF1').textContent = (m.f1*100).toFixed(1) + '%';
+
+    // dot = ความจริงคือ "ไม่ใช่", กากบาท = ความจริงคือ "ใช่"
+    // สีฟ้า = โมเดลทำนายว่า "ใช่" ณ เกณฑ์นี้, สีเทา = โมเดลทำนายว่า "ไม่ใช่"
+    DATA.forEach(function(d, i){
+      var predPos = d.p >= tau;
+      var shape = d.y===1 ? 'cross' : 'dot';
+      var colorCls = predPos ? 'pred-pos' : 'pred-neg';
+      var el = blipEls[i];
+      var wasHidden = el.classList.contains('blip-hidden');
+      el.className = 'blip ' + shape + ' ' + colorCls + (wasHidden ? ' blip-hidden' : '');
+      el.textContent = shape === 'cross' ? '✕' : '';
+    });
+
+    // two-tone slider track: เทา = โซนทำนาย "ไม่ใช่", ฟ้า = โซนทำนาย "ใช่"
+    var pct = (tau*100).toFixed(1);
+    slider.style.background = 'linear-gradient(to right, var(--neg) 0%, var(--neg) ' + pct + '%, var(--pr) ' + pct + '%, var(--pr) 100%)';
+
+    if (rocCtx){
+      rocCtx.marker.setAttribute('cx', rocCtx.X(m.fpr));
+      rocCtx.marker.setAttribute('cy', rocCtx.Y(m.recall));
+    }
+    if (prCtx){
+      prCtx.marker.setAttribute('cx', prCtx.X(m.recall));
+      prCtx.marker.setAttribute('cy', prCtx.Y(m.precision));
+    }
+    rocCoordEl.textContent = '(FPR ' + m.fpr.toFixed(2) + ', TPR ' + m.recall.toFixed(2) + ')';
+    prCoordEl.textContent = '(Recall ' + m.recall.toFixed(2) + ', Precision ' + m.precision.toFixed(2) + ')';
+
+    updateInsight(m);
+  }
+
+  function switchMode(mode){
+    if (mode === currentMode || !DATA_SETS[mode]) return;
+    currentMode = mode;
+    DATA = DATA_SETS[mode];
+    rebuildStrip();
+    rebuildCurves();
+    updateModeUI();
+    render(currentTau, false);
+    writeShared(currentTau, currentMode);
+  }
+
+  modeBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){ switchMode(btn.dataset.mode); });
+  });
+
+  // initial build
+  rebuildStrip();
+  rebuildCurves();
+  updateModeUI();
+  render(0.5, false);
+
+  // ---- shared persistence across visitors ----
+  var STORE_KEY = 'threshold-console-state';
+  var lastWriteTs = 0;
+  var isDragging = false;
+  var writeTimer = null;
+
+  function setSyncState(label, stale){
+    syncText.textContent = label;
+    syncNote.classList.toggle('stale', !!stale);
+  }
+
+  async function writeShared(tau, mode){
+    var ts = Date.now();
+    lastWriteTs = ts;
+    try{
+      await window.storage.set(STORE_KEY, JSON.stringify({tau:tau, mode:mode, ts:ts}), true);
+      setSyncState('ซิงค์แล้ว', false);
+    }catch(e){
+      setSyncState('บันทึกไม่สำเร็จ', true);
+    }
+  }
+
+  async function readShared(){
+    try{
+      var res = await window.storage.get(STORE_KEY, true);
+      if (res && res.value) return JSON.parse(res.value);
+    }catch(e){ /* key not set yet, or offline */ }
+    return null;
+  }
+
+  slider.addEventListener('input', function(){
+    isDragging = true;
+    var tau = parseFloat(slider.value);
+    render(tau, false);
+    if (writeTimer) clearTimeout(writeTimer);
+    writeTimer = setTimeout(function(){ writeShared(tau, currentMode); }, 220);
+  });
+  ['change','mouseup','touchend'].forEach(function(evt){
+    slider.addEventListener(evt, function(){
+      isDragging = false;
+      writeShared(parseFloat(slider.value), currentMode);
+    });
+  });
+
+  (async function init(){
+    var state = await readShared();
+    if (state && typeof state.tau === 'number'){
+      lastWriteTs = state.ts || 0;
+      if (state.mode && state.mode !== currentMode && DATA_SETS[state.mode]){
+        currentMode = state.mode;
+        DATA = DATA_SETS[currentMode];
+        rebuildStrip();
+        rebuildCurves();
+        updateModeUI();
+      }
+      render(state.tau, false);
+    } else {
+      await writeShared(currentTau, currentMode);
+    }
+  })();
+
+  setInterval(async function(){
+    if (isDragging) return;
+    var state = await readShared();
+    if (!state) return;
+    if (state.ts > lastWriteTs){
+      var changed = false;
+      if (state.mode && state.mode !== currentMode && DATA_SETS[state.mode]){
+        currentMode = state.mode;
+        DATA = DATA_SETS[currentMode];
+        rebuildStrip();
+        rebuildCurves();
+        updateModeUI();
+        changed = true;
+      }
+      if (typeof state.tau === 'number' && Math.abs(state.tau - currentTau) > 0.001){
+        changed = true;
+      }
+      if (changed){
+        lastWriteTs = state.ts;
+        setSyncState('มีคนขยับ…', false);
+        render(state.tau, true);
+        setTimeout(function(){ setSyncState('ซิงค์แล้ว', false); }, 1200);
+      }
+    }
+  }, 2200);
+
+})();
+</script>
+</body>
+</html>
