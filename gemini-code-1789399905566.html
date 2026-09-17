@@ -128,10 +128,8 @@
   <div class="dotplot-wrap">
     <svg id="dotPlot" viewBox="0 0 400 220" preserveAspectRatio="none"></svg>
     <div class="legend">
-      <span><span style="color:var(--pos); font-size:14px; font-weight:bold;">☺&#xFE0E;</span> สีเขียว = TN</span>
-      <span><span style="color:var(--pos); font-size:14px; font-weight:bold;">☹&#xFE0E;</span> สีเขียว = TP</span>
-      <span><span style="color:var(--neg); font-size:14px; font-weight:bold;">☹&#xFE0E;</span> สีแดง = FP</span>
-      <span><span style="color:var(--neg); font-size:14px; font-weight:bold;">☺&#xFE0E;</span> สีแดง = FN</span>
+      <span><span style="color:var(--pos); font-size:16px;">●</span> สีเขียว = ทำนายถูก (TP / TN)</span>
+      <span><span style="color:var(--neg); font-size:16px;">●</span> สีแดง = ทำนายผิด (FP / FN)</span>
     </div>
   </div>
 
@@ -146,14 +144,14 @@
 
         <div class="cm-rowhead">จริง<br>ไม่ลาออก</div>
         <div class="quad tn">
-          <div style="color:var(--pos); font-size:18px; font-weight:bold; line-height:1.1; margin-bottom:1px;">☺&#xFE0E;</div>
+          <div style="color:var(--pos); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
           <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
             <div class="code">TN=</div><div class="n" id="cmTN">-</div>
           </div>
           <div class="l">ทำนายถูก</div>
         </div>
         <div class="quad fp">
-          <div style="color:var(--neg); font-size:18px; font-weight:bold; line-height:1.1; margin-bottom:1px;">☹&#xFE0E;</div>
+          <div style="color:var(--neg); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
           <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
             <div class="code">FP=</div><div class="n" id="cmFP">-</div>
           </div>
@@ -162,14 +160,14 @@
 
         <div class="cm-rowhead">จริง<br>ลาออก</div>
         <div class="quad fn">
-          <div style="color:var(--neg); font-size:18px; font-weight:bold; line-height:1.1; margin-bottom:1px;">☺&#xFE0E;</div>
+          <div style="color:var(--neg); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
           <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
             <div class="code">FN=</div><div class="n" id="cmFN">-</div>
           </div>
           <div class="l">ทำนายผิด</div>
         </div>
         <div class="quad tp">
-          <div style="color:var(--pos); font-size:18px; font-weight:bold; line-height:1.1; margin-bottom:1px;">☹&#xFE0E;</div>
+          <div style="color:var(--pos); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
           <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
             <div class="code">TP=</div><div class="n" id="cmTP">-</div>
           </div>
@@ -297,20 +295,14 @@ function drawDotPlot(threshold){
       items.forEach((d, idx)=>{
         const y = padT + chartH - dotR - idx*dotGap;
         if (y < padT) return; 
-        const node = el('text', {
-          x, y, 
-          'text-anchor':'middle',
-          'dominant-baseline':'central',
-          'font-size':(dotR*3.2),
-          'font-weight': 'bold'
-        });
+        const node = el('circle', {cx:x, cy:y, r:dotR, stroke:'#ffffff', 'stroke-width':0.5});
         svg.appendChild(node);
-        dpCache.dots.push({ node, score: d.score, label: d.label, lastIcon: null, lastColor: null });
+        dpCache.dots.push({ node, score: d.score, label: d.label, lastColor: null });
       });
     });
   }
 
-  // อัปเดตเฉพาะส่วนที่ต้องขยับ
+  // สีบอกผลลัพธ์: เขียว = ทำนายถูก, แดง = ทำนายผิด
   dpCache.bgNeg.setAttribute('width', Math.max(0, thX-padL));
   dpCache.bgPos.setAttribute('x', thX);
   dpCache.bgPos.setAttribute('width', Math.max(0, padL+chartW-thX));
@@ -320,22 +312,20 @@ function drawDotPlot(threshold){
   // อัปเดตเฉพาะสีหน้า/ไอคอน ถ้ามีการเปลี่ยนแปลงเท่านั้น
   dpCache.dots.forEach(d => {
     const predictedPositive = d.score >= threshold;
-    let icon = "", color = "";
+    let color = "";
 
     if (predictedPositive && d.label === 1) {
-      icon = "☹\uFE0E"; color = "var(--pos)";
+      color = "var(--pos)";
     } else if (!predictedPositive && d.label === 0) {
-      icon = "☺\uFE0E"; color = "var(--pos)";
+      color = "var(--pos)";
     } else if (predictedPositive && d.label === 0) {
-      icon = "☹\uFE0E"; color = "var(--neg)";
+      color = "var(--neg)";
     } else {
-      icon = "☺\uFE0E"; color = "var(--neg)";
+      color = "var(--neg)";
     }
 
-    if (d.lastIcon !== icon || d.lastColor !== color) {
-      d.node.textContent = icon;
+    if (d.lastColor !== color) {
       d.node.setAttribute('fill', color);
-      d.lastIcon = icon;
       d.lastColor = color;
     }
   });
