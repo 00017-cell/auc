@@ -99,6 +99,7 @@
   .metric .val{font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px;}
   .metric .unit{font-size:7px; color:var(--muted); margin-top:1px;}
   .metrics-title{font-size:11px; font-weight:700; margin:0 0 4px;}
+  .multi-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;margin-bottom:8px}.multi-card h2{font-size:11px;margin:0 0 3px}.multi-card p{font-size:8px;margin:0 0 4px;color:var(--muted)}.multi-card svg{width:100%;height:220px;display:block}.multi-table{width:100%;border-collapse:collapse;font-size:8px}.multi-table th,.multi-table td{padding:4px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}
 
   @media (min-height:760px){
     .head h1{font-size:16px;}
@@ -200,6 +201,13 @@
       <div class="def">ค่าเฉลี่ย Precision&amp;Recall</div>
       <div class="val" id="mF1">-</div>
     </div>
+  </div>
+
+  <div class="multi-card">
+    <h2>Multi-class ROC-AUC · threshold เดียวกัน</h2>
+    <p>จุดสีเปลี่ยนตาม threshold ปัจจุบัน ส่วน AUC คำนวณจากทุก threshold</p>
+    <svg id="multiRocPlot" viewBox="0 0 400 220"></svg>
+    <table class="multi-table"><thead><tr><th>Class</th><th>ROC-AUC</th><th>Precision</th><th>Recall</th></tr></thead><tbody id="multiRows"></tbody></table>
   </div>
 
 <script>
@@ -423,6 +431,31 @@ function drawRocPoint(threshold, tprfpr){
   rocCache.coordText.textContent = `(TPR: ${tpr.toFixed(2)}, FPR: ${fpr.toFixed(2)})`;
 }
 
+const multiColors = ['#00a86b','#d18b00','#8a2be2'];
+const multiData = rawData.slice(0, 90).map((d,i)=>{
+  const label=i%3, scores=[.08,.08,.08];
+  scores[label]=Math.min(.98,.56+((i*17)%38)/100);
+  scores[(label+1)%3]=.06+((i*7)%22)/100;
+  scores[(label+2)%3]=.04+((i*11)%18)/100;
+  return {label,scores};
+});
+function multiAuc(c){
+  const pts=[]; let pos=0,neg=0;
+  multiData.forEach(d=>d.label===c?pos++:neg++);
+  for(let i=0;i<=200;i++){const t=1-i/200;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t;if(p&&d.label===c)tp++;else if(p)fp++;});pts.push({x:fp/neg,y:tp/pos});}
+  let a=0;for(let i=1;i<pts.length;i++)a+=(pts[i].x-pts[i-1].x)*(pts[i].y+pts[i-1].y)/2;return a;
+}
+function multiAt(c,t){let tp=0,fp=0,fn=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;else if(y)fn++;});return {p:(tp+fp)?tp/(tp+fp):0,r:(tp+fn)?tp/(tp+fn):0};}
+function drawMulti(t){
+  const svg=document.getElementById('multiRocPlot'),W=400,H=220,L=34,T=12,PW=350,PH=175,ns='http://www.w3.org/2000/svg';svg.innerHTML='';
+  const e=(tag,a)=>{const n=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>n.setAttribute(k,v));return n;};
+  for(let g=0;g<=1;g+=.2){const x=L+g*PW,y=T+(1-g)*PH;svg.appendChild(e('line',{x1:x,y1:T,x2:x,y2:T+PH,stroke:'#e2e5eb'}));svg.appendChild(e('line',{x1:L,y1:y,x2:L+PW,y2:y,stroke:'#e2e5eb'}));}
+  svg.appendChild(e('line',{x1:L,y1:T+PH,x2:L+PW,y2:T,stroke:'#999','stroke-dasharray':'3,3'}));let aucs=[];
+  for(let c=0;c<3;c++){const auc=multiAuc(c);aucs.push(auc);let pts=[];for(let i=0;i<=200;i++){const t0=1-i/200;let tp=0,fp=0,pos=0,neg=0;multiData.forEach(d=>{const y=d.label===c,p=d.scores[c]>=t0;if(y)pos++;else neg++;if(p&&y)tp++;else if(p)fp++;});pts.push([fp/neg,tp/pos]);}const d=pts.map((p,i)=>(i?'L':'M')+(L+p[0]*PW)+' '+(T+(1-p[1])*PH)).join(' ');svg.appendChild(e('path',{d,fill:'none',stroke:multiColors[c],'stroke-width':2}));const y0=multiData.filter(d=>d.label===c).length, n0=multiData.length-y0;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;});svg.appendChild(e('circle',{cx:L+(fp/n0)*PW,cy:T+(1-tp/y0)*PH,r:4,fill:multiColors[c]}));}
+  const axis= e('text',{x:W/2,y:H-2,'text-anchor':'middle',fill:'#000','font-size':10});axis.textContent='FPR →';svg.appendChild(axis);
+  document.getElementById('multiRows').innerHTML=aucs.map((a,c)=>{const m=multiAt(c,t);return `<tr><td style="color:${multiColors[c]}">Class ${c+1}</td><td>${a.toFixed(3)}</td><td>${(m.p*100).toFixed(1)}%</td><td>${(m.r*100).toFixed(1)}%</td></tr>`;}).join('');
+}
+
 function update(){
   const t = parseFloat(slider.value);
   thVal.textContent = t.toFixed(4);
@@ -430,6 +463,7 @@ function update(){
   drawDotPlot(t);
   const metrics = drawConfusionMatrix(t);
   drawRocPoint(t, metrics);
+  drawMulti(t);
 }
 
 // ใช้ requestAnimationFrame ช่วยควบคุมให้การอัปเดตสัมพันธ์กับรีเฟรชเรทจอ ป้องกันกระตุก

@@ -303,6 +303,7 @@
   /* ---- multiclass / OvO section ---- */
   .multiclass-panel h2{font-size:14px;font-weight:600;margin:0 0 8px;color:var(--text);}
   .multiclass-panel > p.intro{font-size:13px;color:var(--muted);line-height:1.75;margin:0 0 18px;max-width:74ch;}
+  .multi-table-wrap{overflow-x:auto;margin-top:12px}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.multi-table th{color:var(--muted);font-weight:500}.multi-table td{font-family:"IBM Plex Mono",monospace}
   .ovr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
   @media (max-width:680px){.ovr-grid{grid-template-columns:1fr;}}
   .ovr-card{
@@ -516,6 +517,13 @@
     </div>
 
     <p class="ovr-note"><b style="color:var(--text)">OvO vs OvR ต่างกันตรงไหน:</b> OvO ไม่เอา 2 กลุ่มไปรวมกันเป็น "ฝ่ายที่เหลือ" เหมือน OvR เลยไม่เสียลักษณะเฉพาะของแต่ละกลุ่ม และไม่เกิดปัญหาข้อมูลเบ้จากการรวมกลุ่ม (เช่น รวม 🟡+🔴 เป็นฝ่ายเดียวอาจทำให้สัดส่วนเพี้ยนไปจากของจริง) แต่ข้อเสียคือจำนวนคู่ที่ต้องคำนวณเพิ่มเร็วกว่ามากเมื่อมีหลายกลุ่ม (สูตรคือ k(k-1)/2 คู่) — กรณีนี้มี 3 กลุ่มพอดี เลยคำนวณแค่ 3 คู่ เท่ากับจำนวนรอบของ OvR แต่ถ้ามี 10 กลุ่ม OvO ต้องคำนวณถึง 45 คู่ ในขณะที่ OvR คำนวณแค่ 10 รอบเท่านั้น สุดท้ายพอได้ ROC มาหลายคู่ ก็นำ AUC ของทุกคู่มาเฉลี่ยรวมกัน (<b style="color:var(--text)">Macro-average</b>) เพื่อสรุปเป็นตัวเลขเดียวเหมือนเดิม</p>
+  </div>
+
+  <div class="panel" id="multiMetricPanel">
+    <div class="roc-title"><h2>Multi-class ROC-AUC · threshold เดียวกัน</h2><div class="auc mono">Macro <b id="multiMacroAuc">–</b> · Micro <b id="multiMicroAuc">–</b></div></div>
+    <p class="curve-note">คำนวณแบบ One-vs-Rest จากข้อมูลตัวอย่าง 3 คลาส จุดสีบนกราฟและ Precision/Recall จะเปลี่ยนตามค่า τ ปัจจุบัน ส่วน AUC เป็นค่าจากทุก threshold</p>
+    <svg class="roc" id="multiRocSvg" viewBox="0 0 300 240"></svg>
+    <div class="multi-table-wrap"><table class="multi-table"><thead><tr><th>Class</th><th>ROC-AUC</th><th>Precision @ τ</th><th>Recall @ τ</th></tr></thead><tbody id="multiRows"></tbody></table></div>
   </div>
 
   <footer>
@@ -810,6 +818,58 @@
     }
   }
 
+  // ================= multi-class demo (shared threshold) =================
+  var MULTI_COLORS = ['#34D399','#FBBF24','#C084FC'];
+  var MULTI_DATA = [];
+  for (var mi=0; mi<30; mi++){
+    var mc = mi % 3, scores = [0.12,0.12,0.12];
+    scores[mc] = 0.58 + ((mi * 17) % 35) / 100;
+    scores[(mc+1)%3] = 0.08 + ((mi * 7) % 24) / 100;
+    scores[(mc+2)%3] = 0.05 + ((mi * 11) % 20) / 100;
+    MULTI_DATA.push({label:mc, scores:scores});
+  }
+  function multiCurve(classId){
+    var pts=[], pos=0, neg=0;
+    MULTI_DATA.forEach(function(d){ if(d.label===classId) pos++; else neg++; });
+    for(var i=0;i<=200;i++){
+      var t=1-i/200,tp=0,fp=0;
+      MULTI_DATA.forEach(function(d){ var pred=d.scores[classId]>=t; if(pred&&d.label===classId)tp++; else if(pred)fp++; });
+      pts.push({fpr:neg?fp/neg:0,tpr:pos?tp/pos:0});
+    }
+    return {points:pts,auc:trapArea(pts,'fpr','tpr'),pos:pos,neg:neg};
+  }
+  function multiAt(classId,tau){
+    var tp=0,fp=0,fn=0,tn=0;
+    MULTI_DATA.forEach(function(d){var p=d.scores[classId]>=tau,y=d.label===classId;if(p&&y)tp++;else if(p)fp++;else if(y)fn++;else tn++;});
+    var precision=(tp+fp)?tp/(tp+fp):0, recall=(tp+fn)?tp/(tp+fn):0;
+    return {precision:precision,recall:recall,fpr:(fp+tn)?fp/(fp+tn):0};
+  }
+  function microAuc(){
+    var flat=[]; MULTI_DATA.forEach(function(d){for(var c=0;c<3;c++)flat.push({s:d.scores[c],y:d.label===c?1:0});});
+    var pos=flat.filter(function(d){return d.y;}).length,neg=flat.length-pos,pts=[];
+    for(var i=0;i<=200;i++){var t=1-i/200,tp=0,fp=0;flat.forEach(function(d){var p=d.s>=t;if(p&&d.y)tp++;else if(p)fp++;});pts.push({fpr:fp/neg,tpr:tp/pos});}
+    return trapArea(pts,'fpr','tpr');
+  }
+  function drawMulti(tau){
+    var svg=document.getElementById('multiRocSvg'); if(!svg)return;
+    var W=300,H=240,pL=34,pR=12,pT=18,pB=30,pW=W-pL-pR,pH=H-pT-pB;
+    svg.innerHTML=''; var ns='http://www.w3.org/2000/svg';
+    function el(tag,a){var n=document.createElementNS(ns,tag);Object.keys(a).forEach(function(k){n.setAttribute(k,a[k]);});return n;}
+    for(var g=0;g<=1;g+=.2){var x=pL+g*pW,y=pT+(1-g)*pH;svg.appendChild(el('line',{x1:x,y1:pT,x2:x,y2:pT+pH,stroke:'#152036','stroke-width':1}));svg.appendChild(el('line',{x1:pL,y1:y,x2:pL+pW,y2:y,stroke:'#152036','stroke-width':1}));}
+    svg.appendChild(el('line',{x1:pL,y1:pT+pH,x2:pL+pW,y2:pT,stroke:'#334467','stroke-dasharray':'3,3'}));
+    var aucs=[];
+    for(var c=0;c<3;c++){
+      var sw=multiCurve(c); aucs.push(sw.auc); var d=sw.points.map(function(pt,i){return (i?'L':'M')+(pL+pt.fpr*pW)+' '+(pT+(1-pt.tpr)*pH);}).join(' ');
+      svg.appendChild(el('path',{d:d,fill:'none',stroke:MULTI_COLORS[c],'stroke-width':2}));
+      var m=multiAt(c,tau); svg.appendChild(el('circle',{cx:pL+m.fpr*pW,cy:pT+(1-m.recall)*pH,r:4,fill:MULTI_COLORS[c],stroke:'#0A0F1A','stroke-width':1}));
+    }
+    svg.appendChild(el('text',{x:W/2,y:H-5,'text-anchor':'middle',fill:'#7C8AA5','font-size':10})).textContent='FPR →';
+    svg.appendChild(el('text',{x:10,y:H/2,fill:'#7C8AA5','font-size':10,transform:'rotate(-90 10 '+H/2+')'})).textContent='TPR →';
+    document.getElementById('multiMacroAuc').textContent=(aucs.reduce(function(a,b){return a+b;},0)/3).toFixed(3);
+    document.getElementById('multiMicroAuc').textContent=microAuc().toFixed(3);
+    document.getElementById('multiRows').innerHTML=aucs.map(function(a,c){var m=multiAt(c,tau);return '<tr><td style="color:'+MULTI_COLORS[c]+'">Class '+(c+1)+'</td><td>'+a.toFixed(3)+'</td><td>'+(m.precision*100).toFixed(1)+'%</td><td>'+(m.recall*100).toFixed(1)+'%</td></tr>';}).join('');
+  }
+
   // ================= render at a given tau =================
   var currentTau = 0.5;
   function render(tau, animateLine){
@@ -859,6 +919,7 @@
     prCoordEl.textContent = '(Recall ' + m.recall.toFixed(2) + ', Precision ' + m.precision.toFixed(2) + ')';
 
     updateInsight(m);
+    drawMulti(tau);
   }
 
   function switchMode(mode){
