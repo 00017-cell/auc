@@ -19,7 +19,7 @@
     margin:0; background:var(--bg); color:var(--ink);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     display:flex; flex-direction:column;
-    height:100dvh; overflow-y:auto; overflow-x:hidden; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    height:auto; min-height:100dvh; overflow-y:auto; overflow-x:hidden; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
   }
   .head{flex:0 0 auto; margin-bottom:8px;}
   .head h1{font-size:15px; font-weight:700; margin:0 0 2px; letter-spacing:.2px;}
@@ -27,21 +27,22 @@
 
   .thresh-bar{
     flex:0 0 auto; background:var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:10px 14px 12px; margin-bottom:8px;
+    padding:10px 14px 12px; margin-bottom:8px; overflow:visible;
   }
   .thresh-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;}
   .thresh-top label{font-size:11px; color:var(--muted); letter-spacing:.2px;}
   input[type=range]{
-    display:block; width:100%; -webkit-appearance:none; height:8px; border-radius:999px;
-    background:linear-gradient(to right, var(--neg) 0%, var(--neg) var(--pct,50%), var(--pos) var(--pct,50%), var(--pos) 100%);
+    display:block; width:100%; min-width:0; flex:none; margin:0; padding:0; -webkit-appearance:none; appearance:none; height:32px; border-radius:999px;
+    background:linear-gradient(to right, var(--neg) 0%, var(--neg) var(--pct,50%), var(--pos) var(--pct,50%), var(--pos) 100%) center/100% 8px no-repeat;
   }
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:24px; height:24px; border-radius:50%; margin-top:0;
+    -webkit-appearance:none; width:24px; height:24px; border-radius:50%; margin-top:-8px;
     background:#fff; border:3px solid var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.4);
   }
   input[type=range]::-moz-range-thumb{
     width:24px; height:24px; border-radius:50%; background:#fff; border:3px solid var(--ink);
   }
+  input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:999px;}
   input[type=range]::-moz-range-track{height:8px; border-radius:999px;}
   .thresh-val{font-variant-numeric:tabular-nums; font-weight:800; font-size:15px;}
 
