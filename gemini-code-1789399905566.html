@@ -14,7 +14,7 @@
     --tp:var(--pos); --tn:var(--pos); --fp:var(--neg); --fn:var(--neg);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
+  html,body{height:auto;min-height:100%;}
   body{
     margin:0; background:var(--bg); color:var(--ink);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -53,11 +53,11 @@
   .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:10px; color:var(--muted); padding:4px 2px 2px;}
   .legend span{display:inline-flex; align-items:center; gap:4px;}
 
-  .row{flex:0 0 auto; display:flex; gap:8px; margin-bottom:8px;}
+  .row{flex:0 0 auto!important;display:flex;gap:8px;margin-bottom:8px;min-height:220px;align-items:stretch}
 
   .cm-card{
-    flex:1.15; background:var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:8px; display:flex; flex-direction:column;
+    flex:1.15 1 0;min-width:0;height:220px;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:8px;display:flex;flex-direction:column;overflow:hidden;
   }
   .cm-title{font-size:11px; font-weight:700; margin-bottom:2px;}
   .cm-sub{font-size:7.5px; color:var(--muted); margin-bottom:6px; line-height:1.25;}
@@ -81,8 +81,8 @@
   .quad.tn{background:rgba(0,179,0,.15);} 
 
   .roc-card{
-    flex:1; background:var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    flex:1 1 0;min-width:0;height:220px;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
   }
   .roc-card svg{width:100%; height:100%; touch-action:none; cursor:grab;}
   .roc-card svg:active{cursor:grabbing;}
