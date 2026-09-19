@@ -89,7 +89,7 @@
   .roc-card svg:active{cursor:grabbing;}
 
   .metrics{
-    flex:0 0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:6px;
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:12px;
   }
   .metric{
     background:var(--panel2); border:1px solid var(--border); border-radius:10px;
@@ -100,14 +100,38 @@
   .metric .val{font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px;}
   .metric .unit{font-size:7px; color:var(--muted); margin-top:1px;}
   .metrics-title{font-size:11px; font-weight:700; margin:0 0 4px;}
-  .multi-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}.multi-card h2{font-size:15px;margin:0 0 5px}.multi-card p{font-size:12px;margin:0 0 8px;color:var(--muted)}.multi-card svg{width:100%;height:260px;display:block}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
-  body{max-width:1100px;margin:0 auto;padding:20px 24px 32px}.head{margin-bottom:14px}.head h1{font-size:22px}.head p{font-size:14px}.thresh-bar{padding:16px 18px;margin-bottom:14px}.thresh-top label{font-size:14px}.thresh-val{font-size:22px}.dotplot-wrap{flex:0 0 280px;padding:12px 14px 6px;margin-bottom:14px}.legend{font-size:12px;gap:14px}.row{gap:14px;margin-bottom:14px;min-height:280px}.cm-card,.roc-card{height:280px;border-radius:14px;padding:12px}.cm-title,.metrics-title{font-size:14px}.cm-sub{font-size:10px}.cm-colhead,.cm-rowhead{font-size:9px}.quad .code{font-size:10px}.quad .n{font-size:22px}.quad .l{font-size:9px}.metrics{gap:10px}.metric{padding:10px 4px}.metric .lbl{font-size:11px}.metric .def{font-size:8px;min-height:20px}.metric .val{font-size:22px}
-  @media (max-width:560px){body{padding:14px 12px 24px}.head h1{font-size:18px}.head p{font-size:12px}.thresh-bar{padding:12px 14px}.dotplot-wrap{flex-basis:240px}.row{display:flex!important;flex-direction:column!important;min-height:0}.cm-card{display:flex!important;visibility:visible!important;order:1;width:100%;height:300px;min-height:300px;overflow:visible}.roc-card{display:flex!important;order:2;width:100%;height:240px;min-height:240px;overflow:hidden}.cm-grid{min-height:210px}.multi-card{padding:12px;overflow:hidden}.multi-card h2{font-size:14px}.multi-card p{font-size:11px}.multi-card svg{height:200px}.multi-table{font-size:10px}.multi-table th,.multi-table td{padding:6px 3px}.metrics{grid-template-columns:repeat(2,1fr)}.head p{max-width:100%}}
 
-  @media (min-height:760px){
-    .head h1{font-size:16px;}
-    .thresh-val{font-size:16px;}
-  }
+  .table-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+  .table-card h2{font-size:16px;margin:0;font-weight:700;}
+  .table-card p{font-size:12px;margin:4px 0 10px;color:var(--muted);line-height:1.45;}
+  .formula-box{display:flex;flex-wrap:wrap;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:11.5px;}
+  .formula-item{flex:1 1 200px;}
+  .formula-item code{font-family:monospace;background:#fff;padding:1px 5px;border-radius:4px;border:1px solid var(--border);font-size:11px;}
+  .current-pair-badge{display:inline-flex;align-items:center;gap:6px;background:#faf5ff;color:#6b21a8;border:1px solid #d8b4fe;padding:4px 12px;border-radius:999px;font-weight:700;font-size:12px;}
+  .table-controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .tab-btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .tab-btn{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11.5px;cursor:pointer;font-weight:600;transition:all .15s;font-family:inherit;}
+  .tab-btn:hover{border-color:#a200ff;color:#a200ff;}
+  .tab-btn.active{background:#a200ff;color:#ffffff;border-color:#a200ff;}
+  .table-scroll{max-height:350px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--bg);}
+  .roc-table{width:100%;border-collapse:collapse;font-size:12px;text-align:right;}
+  .roc-table th{position:sticky;top:0;background:var(--panel2);z-index:2;padding:8px 6px;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--ink);}
+  .roc-table td{padding:6px;border-bottom:1px solid var(--border);vertical-align:middle;font-variant-numeric:tabular-nums;}
+  .roc-table th:first-child,.roc-table td:first-child{text-align:center;}
+  .roc-table tr{cursor:pointer;transition:background .15s;}
+  .roc-table tbody tr:hover{background:rgba(162,0,255,.07);}
+  .roc-table tr.active-row{background:rgba(162,0,255,.14) !important;font-weight:700;}
+  .pair-badge{display:inline-block;font-family:monospace;font-weight:700;font-size:11.5px;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;border:1px solid #bae6fd;}
+  .active-row .pair-badge{background:#a200ff;color:#fff;border-color:#a200ff;}
+  .select-btn{background:transparent;border:1px solid #a200ff;color:#a200ff;padding:2px 8px;border-radius:4px;font-size:10.5px;cursor:pointer;font-weight:600;font-family:inherit;}
+  .select-btn:hover{background:#a200ff;color:#fff;}
+  .active-row .select-btn{background:#a200ff;color:#fff;}
+
+  .multi-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}.multi-card h2{font-size:15px;margin:0 0 5px}.multi-card p{font-size:12px;margin:0 0 8px;color:var(--muted)}.multi-card svg{width:100%;height:260px;display:block}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
+  body{max-width:1100px;margin:0 auto;padding:20px 24px 32px}.head{margin-bottom:14px}.head h1{font-size:22px}.head p{font-size:14px}.thresh-bar{padding:16px 18px;margin-bottom:14px}.thresh-top label{font-size:14px}.thresh-val{font-size:22px}.dotplot-wrap{flex:0 0 280px;padding:12px 14px 6px;margin-bottom:14px}.legend{font-size:12px;gap:14px}.row{gap:14px;margin-bottom:14px;min-height:280px}.cm-card,.roc-card{height:280px;border-radius:14px;padding:12px}.cm-title,.metrics-title{font-size:14px}.cm-sub{font-size:10px}.cm-colhead,.cm-rowhead{font-size:9px}.quad .code{font-size:10px}.quad .n{font-size:22px}.quad .l{font-size:9px}.metrics{gap:10px;grid-template-columns:repeat(6,1fr);margin-bottom:14px;}.metric{padding:10px 4px}.metric .lbl{font-size:11px}.metric .def{font-size:8px;min-height:20px}.metric .val{font-size:22px}
+  @media (max-width:850px){.metrics{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:560px){body{padding:14px 12px 24px}.head h1{font-size:18px}.head p{font-size:12px}.thresh-bar{padding:12px 14px}.dotplot-wrap{flex-basis:240px}.row{display:flex!important;flex-direction:column!important;min-height:0}.cm-card{display:flex!important;visibility:visible!important;order:1;width:100%;height:300px;min-height:300px;overflow:visible}.roc-card{display:flex!important;order:2;width:100%;height:240px;min-height:240px;overflow:hidden}.cm-grid{min-height:210px}.multi-card{padding:12px;overflow:hidden}.multi-card h2{font-size:14px}.multi-card p{font-size:11px}.multi-card svg{height:200px}.multi-table{font-size:10px}.multi-table th,.multi-table td{padding:6px 3px}.metrics{grid-template-columns:repeat(2,1fr)}.head p{max-width:100%}.table-card{padding:12px;}.roc-table{font-size:10px;}.roc-table th,.roc-table td{padding:5px 3px;}}
+  @media (min-height:760px){.head h1{font-size:16px;}.thresh-val{font-size:16px;}}
 </style>
 </head>
 <body>
@@ -193,14 +217,80 @@
       <div class="val" id="mPrec">-</div>
     </div>
     <div class="metric">
-      <div class="lbl">Recall/TPR</div>
-      <div class="def">คนลาออกจริง จับได้กี่%</div>
+      <div class="lbl">Recall / TPR</div>
+      <div class="def">แกน Y · จับคนลาออกจริงได้กี่%</div>
       <div class="val" id="mTPR">-</div>
     </div>
     <div class="metric">
+      <div class="lbl">FPR</div>
+      <div class="def">แกน X · ไม่ลาออกแต่ทายผิดกี่%</div>
+      <div class="val" id="mFPR">-</div>
+    </div>
+    <div class="metric">
       <div class="lbl">F1-score</div>
-      <div class="def">ค่าเฉลี่ย Precision&amp;Recall</div>
+      <div class="def">ค่าเฉลี่ย Precision &amp; Recall</div>
       <div class="val" id="mF1">-</div>
+    </div>
+    <div class="metric" style="border-color:#d8b4fe; background:#faf5ff;">
+      <div class="lbl" style="color:#7e22ce;">คู่อันดับ (FPR, TPR)</div>
+      <div class="def">พิกัดจุด (X, Y) บนกราฟ ROC</div>
+      <div class="val" id="mCoord" style="color:#7e22ce; font-size:16px;">-</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+      <h2>ตารางแจกแจงค่าและคู่อันดับ (FPR, TPR) สำหรับ ROC Curve</h2>
+      <div class="current-pair-badge">
+        เกณฑ์ปัจจุบัน τ = <span id="curThBadge">0.5000</span> → คู่อันดับ (FPR, TPR) = <b id="curPairBadge" style="color:#7e22ce;">(0.000, 0.000)</b>
+      </div>
+    </div>
+    <p>
+      เส้นโค้ง ROC เกิดจากการนำ <b>คู่อันดับ (FPR, TPR)</b> ที่ระดับ Threshold ต่าง ๆ มาพล็อตลงบนแกนพิกัดฉาก โดยแกน X คือ <b>FPR</b> (อัตราผลบวกลวง) และแกน Y คือ <b>TPR</b> (อัตราผลบวกจริง หรือ Recall) คลิกที่แถวเพื่อเปลี่ยนเกณฑ์ไปยังจุดนั้น
+    </p>
+
+    <div class="formula-box">
+      <div class="formula-item">
+        <b style="color:#7e22ce;">FPR (แกน X):</b> <code>FP / (FP + TN)</code> = สัดส่วนที่ทายว่าลาออกผิดจากคนที่ไม่ลาออกจริง
+      </div>
+      <div class="formula-item">
+        <b style="color:#7e22ce;">TPR / Recall (แกน Y):</b> <code>TP / (TP + FN)</code> = สัดส่วนที่จับคนลาออกจริงได้ถูกต้อง
+      </div>
+      <div class="formula-item">
+        <b style="color:#7e22ce;">คู่อันดับพิกัด:</b> <code>(x, y) = (FPR, TPR)</code> จุดบนระนาบ 2 มิติ (0,0) → (1,1)
+      </div>
+    </div>
+
+    <div class="table-controls">
+      <div class="tab-btn-group">
+        <button type="button" class="tab-btn active" data-mode="step" onclick="switchTableTab('step')">ช่วงสเต็ป 0.05 (21 จุด)</button>
+        <button type="button" class="tab-btn" data-mode="cutoffs" onclick="switchTableTab('cutoffs')">จุดเปลี่ยนสำคัญ (Distinct Cutoffs)</button>
+        <button type="button" class="tab-btn" data-mode="all" onclick="switchTableTab('all')">ข้อมูลคะแนนทั้งหมด</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; font-size:12px;">
+        <span style="color:#444;">แสดง <b id="tablePointCount">21</b> จุด</span>
+        <button type="button" class="tab-btn" onclick="scrollToActiveRow()" style="background:#f3e8ff; border-color:#d8b4fe; color:#6b21a8;">📍 เลื่อนไปแถวเกณฑ์ปัจจุบัน</button>
+      </div>
+    </div>
+
+    <div class="table-scroll" id="tableScrollContainer">
+      <table class="roc-table">
+        <thead>
+          <tr>
+            <th style="width:45px;">จุดที่</th>
+            <th>Threshold (τ)</th>
+            <th>TP</th>
+            <th>FP</th>
+            <th>TN</th>
+            <th>FN</th>
+            <th>FPR (x)</th>
+            <th>TPR (y)</th>
+            <th style="text-align:center;">คู่อันดับ (FPR, TPR)</th>
+            <th style="width:70px; text-align:center;">เลือกจุด</th>
+          </tr>
+        </thead>
+        <tbody id="rocTableBody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -348,7 +438,13 @@ function drawConfusionMatrix(threshold){
   document.getElementById('mAcc').textContent = (acc * 100).toFixed(0) + '%';
   document.getElementById('mPrec').textContent = (prec * 100).toFixed(0) + '%';
   document.getElementById('mTPR').textContent = (tpr * 100).toFixed(0) + '%';
+  document.getElementById('mFPR').textContent = (fpr * 100).toFixed(1) + '%';
   document.getElementById('mF1').textContent = (f1 * 100).toFixed(0) + '%';
+  document.getElementById('mCoord').textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  const curPairEl = document.getElementById('curPairBadge');
+  if (curPairEl) curPairEl.textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  const curThEl = document.getElementById('curThBadge');
+  if (curThEl) curThEl.textContent = threshold.toFixed(4);
 
   return {TP,FP,TN,FN,acc,prec,tpr,fpr,f1};
 }
@@ -421,7 +517,7 @@ function drawRocPoint(threshold, tprfpr){
   rocCache.coordText.setAttribute('x', textX);
   rocCache.coordText.setAttribute('y', textY);
   rocCache.coordText.setAttribute('text-anchor', textAnchor);
-  rocCache.coordText.textContent = `(TPR: ${tpr.toFixed(2)}, FPR: ${fpr.toFixed(2)})`;
+  rocCache.coordText.textContent = `(FPR ${fpr.toFixed(2)}, TPR ${tpr.toFixed(2)})`;
 }
 
 const multiColors = ['#00a86b','#d18b00','#8a2be2'];
@@ -457,6 +553,7 @@ function update(){
   const metrics = drawConfusionMatrix(t);
   drawRocPoint(t, metrics);
   drawMulti(t);
+  highlightTableRow(t);
 }
 
 // ใช้ requestAnimationFrame ช่วยควบคุมให้การอัปเดตสัมพันธ์กับรีเฟรชเรทจอ ป้องกันกระตุก
@@ -533,6 +630,135 @@ rocSvg.addEventListener('pointermove', handleRocPointer);
 rocSvg.addEventListener('pointerup', handleRocPointer);
 rocSvg.addEventListener('pointercancel', handleRocPointer);
 
+// ================= Table & Ordered Pairs (FPR, TPR) =================
+const tableDataCache = {};
+let currentTableMode = 'step';
+
+function getTablePoints(mode){
+  if (tableDataCache[mode]) return tableDataCache[mode];
+  if (mode === 'step') {
+    const pts = [];
+    for (let i = 20; i >= 0; i--) {
+      const t = +(i * 0.05).toFixed(2);
+      const {TP, FP, TN, FN} = computeCounts(t);
+      const tpr = (TP + FN) ? TP / (TP + FN) : 0;
+      const fpr = (FP + TN) ? FP / (FP + TN) : 0;
+      pts.push({ threshold: t, TP, FP, TN, FN, tpr, fpr });
+    }
+    tableDataCache.step = pts;
+    return pts;
+  }
+  if (mode === 'cutoffs') {
+    const sorted = [...rawData].sort((a,b) => b.score - a.score);
+    const cutoffs = [1.0001];
+    sorted.forEach(d => cutoffs.push(d.score));
+    cutoffs.push(0.0);
+    let lastTpr = -1, lastFpr = -1;
+    const pts = [];
+    cutoffs.forEach(t => {
+      const {TP, FP, TN, FN} = computeCounts(t);
+      const tpr = (TP + FN) ? TP / (TP + FN) : 0;
+      const fpr = (FP + TN) ? FP / (FP + TN) : 0;
+      if (Math.abs(tpr - lastTpr) > 0.0001 || Math.abs(fpr - lastFpr) > 0.0001) {
+        pts.push({ threshold: t, TP, FP, TN, FN, tpr, fpr });
+        lastTpr = tpr;
+        lastFpr = fpr;
+      }
+    });
+    tableDataCache.cutoffs = pts;
+    return pts;
+  }
+  if (mode === 'all') {
+    const scores = [...new Set(rawData.map(d => d.score))].sort((a,b) => b - a);
+    const cutoffs = [1.0001, ...scores, 0.0];
+    const pts = cutoffs.map(t => {
+      const {TP, FP, TN, FN} = computeCounts(t);
+      const tpr = (TP + FN) ? TP / (TP + FN) : 0;
+      const fpr = (FP + TN) ? FP / (FP + TN) : 0;
+      return { threshold: t, TP, FP, TN, FN, tpr, fpr };
+    });
+    tableDataCache.all = pts;
+    return pts;
+  }
+}
+
+function renderTable(mode){
+  currentTableMode = mode;
+  const pts = getTablePoints(mode);
+  const tbody = document.getElementById('rocTableBody');
+  const countSpan = document.getElementById('tablePointCount');
+  if (countSpan) countSpan.textContent = pts.length;
+  if (!tbody) return;
+  
+  let html = '';
+  pts.forEach((p, idx) => {
+    const thStr = p.threshold > 1 ? '> max (1.0)' : p.threshold.toFixed(4);
+    html += `<tr data-idx="${idx}" data-t="${p.threshold}" onclick="selectThreshold(${p.threshold})">
+      <td style="color:var(--muted);">${idx + 1}</td>
+      <td style="font-weight:700;">${thStr}</td>
+      <td style="color:var(--pos); font-weight:600;">${p.TP}</td>
+      <td style="color:var(--neg); font-weight:600;">${p.FP}</td>
+      <td style="color:var(--pos); font-weight:600;">${p.TN}</td>
+      <td style="color:var(--neg); font-weight:600;">${p.FN}</td>
+      <td>${p.fpr.toFixed(4)}</td>
+      <td>${p.tpr.toFixed(4)}</td>
+      <td style="text-align:center;"><span class="pair-badge">(${p.fpr.toFixed(3)}, ${p.tpr.toFixed(3)})</span></td>
+      <td style="text-align:center;"><button type="button" class="select-btn">เลือก</button></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+  lastActiveRow = null;
+  highlightTableRow(parseFloat(slider.value));
+}
+
+let lastActiveRow = null;
+function highlightTableRow(t){
+  const pts = getTablePoints(currentTableMode);
+  if (!pts || !pts.length) return;
+  
+  let bestIdx = 0;
+  let bestDiff = Math.abs(pts[0].threshold - t);
+  for (let i = 1; i < pts.length; i++) {
+    const diff = Math.abs(pts[i].threshold - t);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
+    }
+  }
+  
+  const tbody = document.getElementById('rocTableBody');
+  if (!tbody) return;
+  const rows = tbody.children;
+  if (lastActiveRow && lastActiveRow !== rows[bestIdx]) {
+    lastActiveRow.classList.remove('active-row');
+  }
+  if (rows[bestIdx]) {
+    rows[bestIdx].classList.add('active-row');
+    lastActiveRow = rows[bestIdx];
+  }
+}
+
+function selectThreshold(t){
+  const validT = Math.max(0, Math.min(1, t));
+  slider.value = validT;
+  requestUpdate();
+}
+
+function switchTableTab(mode){
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  renderTable(mode);
+}
+
+function scrollToActiveRow(){
+  const activeRow = document.querySelector('#rocTableBody tr.active-row');
+  if (activeRow) {
+    activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+renderTable('step');
 update();
 </script>
 </body>
