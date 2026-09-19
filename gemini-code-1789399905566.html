@@ -94,16 +94,16 @@
   .quad.fn{background:rgba(220,38,38,.13);} 
   .quad.tn{background:rgba(22,163,74,.13);} 
 
-  .roc-card{
+  .roc-card, .pr-card{
     flex:1 1 0;min-width:0;height:300px;background:var(--panel);border:1px solid var(--border);border-radius:14px;
     padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);
   }
-  .roc-card svg{width:100%; height:100%; touch-action:none; cursor:grab;}
-  .roc-card svg:active{cursor:grabbing;}
+  .roc-card svg, .pr-card svg{width:100%; height:100%; touch-action:none; cursor:grab;}
+  .roc-card svg:active, .pr-card svg:active{cursor:grabbing;}
 
   .metrics-title{font-size:16px; font-weight:700; margin:0 0 6px; color:var(--ink);}
   .metrics{
-    flex:0 0 auto; display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:14px;
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:14px;
   }
   .metric{
     background:var(--panel2); border:1px solid var(--border); border-radius:12px;
@@ -147,6 +147,50 @@
   .c-fn{color:var(--neg);font-weight:700;}
   .c-coord{color:#7e22ce;font-weight:700;}
 
+  /* Compare Card */
+  .compare-card{
+    flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
+  }
+  .compare-header{
+    display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px;
+  }
+  .compare-pills{display:flex; gap:8px; flex-wrap:wrap;}
+  .pill-roc{
+    font-family:var(--font-mono); font-size:12.5px; background:#faf5ff; border:1px solid #d8b4fe;
+    color:#7e22ce; padding:4px 10px; border-radius:8px; font-weight:600;
+  }
+  .pill-pr{
+    font-family:var(--font-mono); font-size:12.5px; background:#f0f9ff; border:1px solid #bae6fd;
+    color:#0284c7; padding:4px 10px; border-radius:8px; font-weight:600;
+  }
+  .compare-lead{font-size:13.5px; color:var(--muted); line-height:1.6; margin:0 0 14px;}
+  .compare-live-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:14px;}
+  .compare-live-box{
+    border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .compare-live-box.roc-live{background:#faf5ff; border:1px solid #d8b4fe;}
+  .compare-live-box.pr-live{background:#f0f9ff; border:1px solid #bae6fd;}
+  .cl-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .cl-title{font-size:13.5px; font-weight:700;}
+  .cl-badge{font-family:var(--font-mono); font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px;}
+  .cl-badge.roc-badge{background:#f3e8ff; color:#7e22ce;}
+  .cl-badge.pr-badge{background:#e0f2fe; color:#0284c7;}
+  .cl-point{font-family:var(--font-mono); font-size:18px; font-weight:700; margin:4px 0; color:var(--ink);}
+  .cl-sub{font-size:12px; color:var(--muted); line-height:1.4;}
+  .compare-table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .compare-table th, .compare-table td{
+    padding:10px 12px; border:1px solid var(--border); vertical-align:top; text-align:left; line-height:1.45;
+  }
+  .compare-table th{background:var(--panel2); font-weight:700; color:var(--ink); font-size:13px;}
+  .compare-table tr:nth-child(even){background:#fcfdfe;}
+  .insight-box{
+    background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:14px 16px; margin-top:10px;
+  }
+  .insight-title{font-weight:700; font-size:13.5px; color:var(--ink); margin-bottom:6px;}
+  .insight-text{font-size:13px; color:var(--muted); line-height:1.6;}
+  .insight-text b{color:var(--ink);}
+
   .multi-card{
     flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;
     padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
@@ -159,10 +203,17 @@
   .multi-table th{font-family:var(--font-main);font-weight:600;color:var(--muted);font-size:12.5px;}
   .multi-table th:first-child,.multi-table td:first-child{text-align:left;font-family:var(--font-main);font-weight:600;}
 
-  .row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
+  .row>*{min-width:0;overflow:hidden}.roc-card,.cm-card,.pr-card{min-width:0}.roc-card svg,.pr-card svg{min-width:0}
 
-  @media (max-width:900px){
-    .metrics{grid-template-columns:repeat(3,1fr);}
+  @media (max-width:1050px){
+    .row{flex-wrap:wrap;}
+    .cm-card{flex:1 1 100%;height:auto;min-height:290px;}
+    .roc-card,.pr-card{flex:1 1 calc(50% - 8px);height:280px;}
+    .metrics{grid-template-columns:repeat(4,1fr);}
+  }
+  @media (max-width:768px){
+    .metrics{grid-template-columns:repeat(2,1fr);}
+    .compare-live-grid{grid-template-columns:1fr;}
   }
   @media (max-width:640px){
     body{padding:14px 12px 28px;}
@@ -173,10 +224,12 @@
     .row{display:flex!important;flex-direction:column!important;min-height:0;gap:12px;}
     .cm-card{display:flex!important;visibility:visible!important;order:1;width:100%;height:320px;min-height:320px;}
     .roc-card{display:flex!important;order:2;width:100%;height:260px;min-height:260px;}
-    .metrics{grid-template-columns:repeat(2,1fr);}
+    .pr-card{display:flex!important;order:3;width:100%;height:260px;min-height:260px;}
     .math-grid{grid-template-columns:1fr;}
     .multi-table{font-size:12px;}
     .multi-table th,.multi-table td{padding:6px 4px;}
+    .compare-table{font-size:12px;}
+    .compare-table th,.compare-table td{padding:8px 6px;}
   }
 </style>
 </head>
@@ -184,7 +237,7 @@
 
   <div class="head">
     <h1>Threshold Explorer — HR Attrition</h1>
-    <p>ลาก threshold หรือลากจุดบน ROC แล้วดู dot plot · confusion matrix เปลี่ยนพร้อมกันทั้งหมด</p>
+    <p>ลาก threshold หรือลากจุดบนกราฟ ROC / PR แล้วดู dot plot · confusion matrix · ทุกสูตรคณิตศาสตร์เปลี่ยนพร้อมกัน</p>
   </div>
 
   <div class="thresh-bar">
@@ -248,6 +301,9 @@
     <div class="roc-card">
       <svg id="rocPlot" viewBox="0 0 200 200"></svg>
     </div>
+    <div class="pr-card">
+      <svg id="prPlot" viewBox="0 0 200 200"></svg>
+    </div>
   </div>
 
   <div class="metrics-title">Metric</div>
@@ -278,9 +334,14 @@
       <div class="val" id="mF1">-</div>
     </div>
     <div class="metric" style="border-color:#d8b4fe; background:#faf5ff;">
-      <div class="lbl" style="color:#7e22ce;">คู่อันดับ (FPR, TPR)</div>
+      <div class="lbl" style="color:#7e22ce;">คู่อันดับ ROC (FPR, TPR)</div>
       <div class="def">พิกัดจุด (X, Y) บนกราฟ ROC</div>
       <div class="val" id="mCoord" style="color:#7e22ce; font-size:18px;">-</div>
+    </div>
+    <div class="metric" style="border-color:#bae6fd; background:#f0f9ff;">
+      <div class="lbl" style="color:#0284c7;">คู่อันดับ PR (Recall, Prec)</div>
+      <div class="def">พิกัดจุด (X, Y) บนกราฟ PR</div>
+      <div class="val" id="mPrCoord" style="color:#0284c7; font-size:18px;">-</div>
     </div>
   </div>
 
@@ -477,6 +538,95 @@
     </div>
   </div>
 
+  <div class="compare-card">
+    <div class="compare-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:22px;">⚖️</span>
+        <div>
+          <h2 style="margin:0; font-size:17px; font-weight:700; color:var(--ink);">เปรียบเทียบเชิงลึก: ROC Curve vs Precision-Recall (PR) Curve</h2>
+          <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">ทำความเข้าใจความแตกต่าง และเหตุผลที่ชุดข้อมูล HR Attrition ต้องประเมิน PR Curve ควบคู่กับ ROC</div>
+        </div>
+      </div>
+      <div class="compare-pills">
+        <span class="pill-roc">ROC-AUC: <b>0.808</b> (Baseline: 0.500)</span>
+        <span class="pill-pr">PR-AUC: <b>0.568</b> (Baseline: 0.160)</span>
+      </div>
+    </div>
+
+    <p class="compare-lead">
+      ในการทำ Data Mining &amp; Classification โดยเฉพาะชุดข้อมูล <b>HR Attrition ที่มี Class Imbalance สูง</b> (คนลาออกเพียง 47 คน หรือ 16.0% จาก 294 คน) การดูเฉพาะกราฟ ROC อาจทำให้เข้าใจผิดได้ เพราะค่า TN (247 คน) ที่มีจำนวนมากจะดึงให้ค่า FPR ต่ำเสมอ กราฟ PR จึงมีความสำคัญอย่างยิ่งในการประเมินประสิทธิภาพจริง
+    </p>
+
+    <div class="compare-live-grid">
+      <div class="compare-live-box roc-live">
+        <div class="cl-head">
+          <span class="cl-title" style="color:#7e22ce;">📊 ROC Curve (FPR vs Recall)</span>
+          <span class="cl-badge roc-badge">AUC = 0.808</span>
+        </div>
+        <div class="cl-point" id="cmpRocPt">(FPR: 0.040, TPR: 0.340)</div>
+        <div class="cl-sub">จุดพิกัดปัจจุบันบนเส้น ROC เทียบกับเส้นสุ่มเดา <b>(0.500)</b></div>
+      </div>
+      <div class="compare-live-box pr-live">
+        <div class="cl-head">
+          <span class="cl-title" style="color:#0284c7;">🎯 PR Curve (Recall vs Precision)</span>
+          <span class="cl-badge pr-badge">PR-AUC = 0.568</span>
+        </div>
+        <div class="cl-point" id="cmpPrPt">(Recall: 0.340, Prec: 0.615)</div>
+        <div class="cl-sub">จุดพิกัดปัจจุบันบนเส้น PR เทียบกับอัตราส่วนคนลาออกจริง <b>16.0% (0.160)</b></div>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:20%;">มิติเปรียบเทียบ</th>
+            <th style="width:40%;">ROC Curve (Receiver Operating Characteristic)</th>
+            <th style="width:40%;">PR Curve (Precision-Recall)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>แกน X (แนวนอน)</b></td>
+            <td><b>FPR (False Positive Rate)</b> = <code>FP / (FP + TN)</code><br><span style="color:var(--muted); font-size:12px;">สัดส่วนคนที่ "ไม่ลาออก" แต่โมเดลทายผิดว่าลาออก</span></td>
+            <td><b>Recall (Sensitivity / TPR)</b> = <code>TP / (TP + FN)</code><br><span style="color:var(--muted); font-size:12px;">สัดส่วนคนที่ "ลาออกจริง" ที่โมเดลตรวจจับได้</span></td>
+          </tr>
+          <tr>
+            <td><b>แกน Y (แนวตั้ง)</b></td>
+            <td><b>TPR (True Positive Rate / Recall)</b> = <code>TP / (TP + FN)</code><br><span style="color:var(--muted); font-size:12px;">สัดส่วนคนที่ "ลาออกจริง" ที่โมเดลตรวจจับได้</span></td>
+            <td><b>Precision (ความแม่นยำ)</b> = <code>TP / (TP + FP)</code><br><span style="color:var(--muted); font-size:12px;">ในกลุ่มคนที่ทายว่าลาออก เป็นคนที่ลาออกจริงกี่ %</span></td>
+          </tr>
+          <tr>
+            <td><b>เส้นสุ่มเดา (Baseline)</b></td>
+            <td><b>เส้นทแยงมุม</b> จาก (0,0) ไป (1,1) ค่า AUC = <b>0.500</b> เสมอในทุกชุดข้อมูล</td>
+            <td><b>เส้นแนวนอน</b> ที่ระดับ Prevalence = <b>47/294 = 16.0% (0.160)</b> เปลี่ยนตามสัดส่วนข้อมูลจริง</td>
+          </tr>
+          <tr>
+            <td><b>คะแนนพื้นที่ใต้กราฟ (AUC)</b></td>
+            <td><b>ROC-AUC = 0.808</b> (ดูสูงมาก ~81% จัดเป็นโมเดลระดับดีเยี่ยม)</td>
+            <td><b>PR-AUC = 0.568</b> (แม้ดูน้อยกว่า แต่สูงกว่าสุ่มเดา 0.160 ถึง <b>3.5 เท่า</b>)</td>
+          </tr>
+          <tr>
+            <td><b>ผลกระทบจาก Class Imbalance</b></td>
+            <td><b>ไม่ไวต่อข้อมูลไม่สมดุล (Insensitive)</b><br>เพราะตัวส่วนของ FPR มีค่า TN=247 คอยกดให้ FPR ต่ำ ทำให้กราฟ ROC มัก <i>ดูดีเกินจริง (Optimistic)</i></td>
+            <td><b>ไวต่อข้อมูลไม่สมดุลสูง (Sensitive)</b><br>ไม่นำค่า TN มาคิด จึงสะท้อนความผิดพลาดเมื่อทายคนผิด (FP) ได้อย่างคมชัดและตรงความเป็นจริง</td>
+          </tr>
+          <tr>
+            <td><b>ข้อแนะนำในการตัดสินใจ</b></td>
+            <td>เหมาะสำหรับประเมินความสามารถแยกแยะโดยรวม และกรณีที่ข้อมูลทั้ง 2 คลาสมีจำนวนพอๆ กัน (~50:50)</td>
+            <td><b>สำคัญมากสำหรับ HR Attrition:</b> ช่วยให้ฝ่ายบุคคลไม่เสียเวลาไปคุยกับคนที่ไม่คิดจะลาออก (คุม Precision) ขณะที่ยังเก็บคนจะลาออกได้ครบถ้วน (Recall)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight-box">
+      <div class="insight-title">💡 ประเด็นสำคัญที่ต้องจำ (Key Takeaways):</div>
+      <div class="insight-text">
+        เมื่อข้อมูลมี Class Imbalance (คนลาออก 47 คน vs ไม่ลาออก 247 คน) <b>กราฟ ROC เพียงอย่างเดียวจะหลอกตาเราได้</b> เพราะค่า TN ที่มหาศาลทำให้ตัวหารของ FPR ใหญ่มาก จนทำให้โมเดลดูแม่นยำเกินจริง การดู <b>PR Curve ควบคู่กัน</b> จะทำให้เห็นว่าที่ Threshold หนึ่งๆ เราจับคนลาออกได้จริงกี่คน (Recall) และในกลุ่มที่เรียกมาคุยนั้น ถูกต้องจริงกี่คน (Precision) โดยไม่ถูกกลุ่มคนไม่ลาออก (TN) บดบัง
+      </div>
+    </div>
+  </div>
 
   <div class="multi-card">
     <h2>Multi-class ROC-AUC · threshold เดียวกัน</h2>
@@ -522,6 +672,19 @@ function rocCurvePoints(){
     rocPts.push([fpr, tpr, t]); 
   }
   return rocPts;
+}
+
+let prPts = null;
+function prCurvePoints(){
+  if (prPts) return prPts;
+  prPts = [];
+  for (let t=0; t<=1.0001; t+=0.001){
+    const {TP,FP,TN,FN} = computeCounts(t);
+    const recall = (TP+FN) ? TP/(TP+FN) : 0;
+    const prec = (TP+FP) ? TP/(TP+FP) : 1;
+    prPts.push([recall, prec, t]); 
+  }
+  return prPts;
 }
 
 // แคชเพื่อเก็บ Object ของ SVG ป้องกันการสร้างใหม่ทุกรอบ
@@ -625,6 +788,12 @@ function drawConfusionMatrix(threshold){
   document.getElementById('mFPR').textContent = (fpr * 100).toFixed(1) + '%';
   document.getElementById('mF1').textContent = (f1 * 100).toFixed(0) + '%';
   document.getElementById('mCoord').textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  const mPrCoordEl = document.getElementById('mPrCoord');
+  if (mPrCoordEl) mPrCoordEl.textContent = `(${tpr.toFixed(3)}, ${prec.toFixed(3)})`;
+  const cmpRoc = document.getElementById('cmpRocPt');
+  if (cmpRoc) cmpRoc.textContent = `(FPR: ${fpr.toFixed(3)}, TPR: ${tpr.toFixed(3)})`;
+  const cmpPr = document.getElementById('cmpPrPt');
+  if (cmpPr) cmpPr.textContent = `(Recall: ${tpr.toFixed(3)}, Prec: ${prec.toFixed(3)})`;
   const curPairEl = document.getElementById('curPairBadge');
   if (curPairEl) curPairEl.textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
   const curThEl = document.getElementById('curThBadge');
@@ -659,6 +828,12 @@ function drawRocPoint(threshold, tprfpr){
 
     svg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
     svg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+
+    // เส้นสุ่มเดา Random Diagonal
+    svg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT, stroke:'#94a3b8', 'stroke-width':1.2, 'stroke-dasharray':'3,2'}));
+    const rndLbl = el('text', {x:padL+plotW-4, y:padT+14, 'text-anchor':'end', 'font-size':'8', 'font-family':'var(--font-mono)', 'font-weight':'600', fill:'#94a3b8'});
+    rndLbl.textContent = 'Random 0.50';
+    svg.appendChild(rndLbl);
 
     const pts = rocCurvePoints();
     const path = pts.map((p,i)=>{
@@ -702,6 +877,86 @@ function drawRocPoint(threshold, tprfpr){
   rocCache.coordText.setAttribute('y', textY);
   rocCache.coordText.setAttribute('text-anchor', textAnchor);
   rocCache.coordText.textContent = `(FPR ${fpr.toFixed(2)}, TPR ${tpr.toFixed(2)})`;
+}
+
+let prCache = null;
+function drawPrPoint(threshold, tprfpr){
+  const svg = document.getElementById('prPlot');
+  if (!svg) return;
+  const W = 200, H = 200;
+  const padL = 34, padR = 10, padT = 26, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  if (!prCache) {
+    svg.innerHTML = "";
+    const title = el('text', {x:W/2, y:15, 'text-anchor':'middle', 'font-size':'12', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)'});
+    title.textContent = 'PR curve (ลากจุดได้)';
+    svg.appendChild(title);
+
+    for (let g=0; g<=1.0001; g+=0.2){
+      const gx = padL + g*plotW;
+      const gy = padT + (1-g)*plotH;
+      svg.appendChild(el('line', {x1:gx, y1:padT, x2:gx, y2:padT+plotH, stroke:'#e2e8f0', 'stroke-width':1}));
+      svg.appendChild(el('line', {x1:padL, y1:gy, x2:padL+plotW, y2:gy, stroke:'#e2e8f0', 'stroke-width':1}));
+      const xl = el('text', {x:gx, y:padT+plotH+12, 'text-anchor':'middle', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
+      xl.textContent = g.toFixed(1); svg.appendChild(xl);
+      const yl = el('text', {x:padL-5, y:gy+3, 'text-anchor':'end', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
+      yl.textContent = g.toFixed(1); svg.appendChild(yl);
+    }
+
+    svg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+    svg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+
+    // Random Baseline: Prevalence = 47 / 294 ≈ 0.1599
+    const prevalence = 47 / 294;
+    const baseY = padT + (1 - prevalence) * plotH;
+    svg.appendChild(el('line', {x1:padL, y1:baseY, x2:padL+plotW, y2:baseY, stroke:'#ef4444', 'stroke-width':1.2, 'stroke-dasharray':'3,2'}));
+    const baseLbl = el('text', {x:padL+plotW-2, y:baseY-3, 'text-anchor':'end', 'font-size':'8', 'font-family':'var(--font-mono)', 'font-weight':'600', fill:'#ef4444'});
+    baseLbl.textContent = 'Baseline 16.0%';
+    svg.appendChild(baseLbl);
+
+    const pts = prCurvePoints();
+    const sorted = [...pts].sort((a,b) => a[0] - b[0] || b[1] - a[1]);
+    const path = sorted.map((p,i)=>{
+      const x = padL + p[0]*plotW, y = padT + (1-p[1])*plotH;
+      return (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    svg.appendChild(el('path', {d:path, stroke:'#0284c7', 'stroke-width':2.2, fill:'none'}));
+
+    prCache = {
+      circle: el('circle', {r:7, fill:'#0284c7', stroke:'#ffffff', 'stroke-width':2}),
+      coordText: el('text', {'font-size': '10', 'font-weight': '700', 'font-family':'var(--font-mono)', fill: '#0284c7', 'pointer-events': 'none'})
+    };
+    svg.appendChild(prCache.circle);
+    svg.appendChild(prCache.coordText);
+
+    const xt = el('text', {x:padL+plotW/2, y:H-3, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)'});
+    xt.textContent = 'Recall'; svg.appendChild(xt);
+    const yt = el('text', {x:11, y:padT+plotH/2, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)', transform:`rotate(-90 11 ${padT+plotH/2})`});
+    yt.textContent = 'Precision'; svg.appendChild(yt);
+  }
+
+  const {tpr, prec} = tprfpr;
+  const cx = padL + tpr*plotW, cy = padT + (1-prec)*plotH;
+  prCache.circle.setAttribute('cx', cx);
+  prCache.circle.setAttribute('cy', cy);
+
+  let textAnchor = 'start';
+  let textX = cx + 10;
+  let textY = cy - 8;
+
+  if (tpr > 0.6) {
+    textAnchor = 'end';
+    textX = cx - 12;
+  }
+  if (prec > 0.85) {
+    textY = cy + 16;
+  }
+
+  prCache.coordText.setAttribute('x', textX);
+  prCache.coordText.setAttribute('y', textY);
+  prCache.coordText.setAttribute('text-anchor', textAnchor);
+  prCache.coordText.textContent = `(R ${tpr.toFixed(2)}, P ${prec.toFixed(2)})`;
 }
 
 const multiColors = ['#00a86b','#d18b00','#8a2be2'];
@@ -815,6 +1070,7 @@ function update(){
   drawDotPlot(t);
   const metrics = drawConfusionMatrix(t);
   drawRocPoint(t, metrics);
+  drawPrPoint(t, metrics);
   drawMulti(t);
   updateMathFormulas(t, metrics);
 }
@@ -838,6 +1094,7 @@ window.addEventListener('resize', () => {
   // เมื่อย่อขยายจอ ต้องรีเซ็ต Cache ให้วาดใหม่ให้พอดีขนาด
   dpCache = null;
   rocCache = null;
+  prCache = null;
   requestUpdate();
 });
 
@@ -892,6 +1149,60 @@ rocSvg.addEventListener('pointerdown', handleRocPointer);
 rocSvg.addEventListener('pointermove', handleRocPointer);
 rocSvg.addEventListener('pointerup', handleRocPointer);
 rocSvg.addEventListener('pointercancel', handleRocPointer);
+
+const prSvg = document.getElementById('prPlot');
+let isDraggingPr = false;
+
+function handlePrPointer(e) {
+  if (!isDraggingPr && e.type !== 'pointerdown') return;
+  
+  if (e.type === 'pointerdown') {
+    isDraggingPr = true;
+    prSvg.setPointerCapture(e.pointerId); 
+  }
+  
+  if (e.type === 'pointerup' || e.type === 'pointercancel') {
+    isDraggingPr = false;
+    prSvg.releasePointerCapture(e.pointerId);
+    return;
+  }
+
+  const rect = prSvg.getBoundingClientRect();
+  const scaleX = 200 / rect.width;
+  const scaleY = 200 / rect.height;
+  const svgX = (e.clientX - rect.left) * scaleX;
+  const svgY = (e.clientY - rect.top) * scaleY;
+
+  const padL = 34, padT = 26, plotW = 156, plotH = 144; 
+  const targetRecall = (svgX - padL) / plotW;
+  const targetPrec = 1 - (svgY - padT) / plotH;
+
+  const pts = prCurvePoints();
+  let bestDist = Infinity;
+  let bestT = slider.value;
+  
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const dx = p[0] - targetRecall;
+    const dy = p[1] - targetPrec;
+    const dist = (dx * dx) + (dy * dy);
+    
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestT = p[2];
+    }
+  }
+
+  slider.value = bestT;
+  requestUpdate();
+}
+
+if (prSvg) {
+  prSvg.addEventListener('pointerdown', handlePrPointer);
+  prSvg.addEventListener('pointermove', handlePrPointer);
+  prSvg.addEventListener('pointerup', handlePrPointer);
+  prSvg.addEventListener('pointercancel', handlePrPointer);
+}
 
 
 update();
