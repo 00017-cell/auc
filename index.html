@@ -4,132 +4,180 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Threshold Explorer — HR Attrition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#ffffff; --panel:#f6f7f9; --panel2:#eef0f4; 
-    --ink:#000000; --muted:#000000;
-    --neg:#e60000; /* แดงสดเข้ม */
-    --pos:#00b300; /* เขียวสดเข้ม */
-    --line:#000000; --border:#e2e5eb;
-    --tp:var(--pos); --tn:var(--pos); --fp:var(--neg); --fn:var(--neg);
+    --bg: #f8fafc;
+    --panel: #ffffff;
+    --panel2: #f1f5f9; 
+    --ink: #0f172a;
+    --muted: #475569;
+    --neg: #dc2626; /* แดงสดชัด */
+    --pos: #16a34a; /* เขียวสดชัด */
+    --line: #0f172a;
+    --border: #e2e8f0;
+    --tp: var(--pos); --tn: var(--pos); --fp: var(--neg); --fn: var(--neg);
+    --font-main: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:auto;min-height:100%;}
   body{
     margin:0; background:var(--bg); color:var(--ink);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: var(--font-main);
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     display:flex; flex-direction:column;
-    height:auto; min-height:100dvh; overflow-y:auto; overflow-x:hidden; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    height:auto; min-height:100dvh; overflow-y:auto; overflow-x:hidden;
+    max-width: 1120px; margin: 0 auto; padding: 20px 20px 40px;
   }
-  .head{flex:0 0 auto; margin-bottom:8px;}
-  .head h1{font-size:15px; font-weight:700; margin:0 0 2px; letter-spacing:.2px;}
-  .head p{font-size:11px; color:var(--muted); margin:0; line-height:1.35;}
+  .head{flex:0 0 auto; margin-bottom:14px;}
+  .head h1{font-size:24px; font-weight:700; margin:0 0 4px; letter-spacing:-0.2px; color:var(--ink);}
+  .head p{font-size:14px; color:var(--muted); margin:0; line-height:1.5;}
 
   .thresh-bar{
-    flex:0 0 auto; background:var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:10px 14px 12px; margin-bottom:8px; overflow:visible;
+    flex:0 0 auto; background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:14px 18px; margin-bottom:14px; overflow:visible; box-shadow:0 1px 3px rgba(0,0,0,0.03);
   }
-  .thresh-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;}
-  .thresh-top label{font-size:11px; color:var(--muted); letter-spacing:.2px;}
+  .thresh-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .thresh-top label{font-size:14px; font-weight:600; color:var(--ink);}
   input[type=range]{
     display:block; width:100%; min-width:0; flex:none; margin:0; padding:0; -webkit-appearance:none; appearance:none; height:32px; border-radius:999px;
     background:linear-gradient(to right, var(--neg) 0%, var(--neg) var(--pct,50%), var(--pos) var(--pct,50%), var(--pos) 100%) center/100% 8px no-repeat;
+    cursor:pointer;
   }
   input[type=range]::-webkit-slider-thumb{
     -webkit-appearance:none; width:24px; height:24px; border-radius:50%; margin-top:-8px;
-    background:#fff; border:3px solid var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.4);
+    background:#fff; border:3px solid var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.3);
   }
   input[type=range]::-moz-range-thumb{
     width:24px; height:24px; border-radius:50%; background:#fff; border:3px solid var(--ink);
   }
   input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:999px;}
   input[type=range]::-moz-range-track{height:8px; border-radius:999px;}
-  .thresh-val{font-variant-numeric:tabular-nums; font-weight:800; font-size:15px;}
+  .thresh-val{font-family:var(--font-mono); font-weight:700; font-size:24px; color:var(--ink);}
 
   .dotplot-wrap{
-    flex:1 1 auto; min-height:0; background:var(--panel); border:1px solid var(--border);
-    border-radius:12px; padding:8px 10px 2px; margin-bottom:8px; display:flex; flex-direction:column;
+    flex:0 0 260px; background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:12px 14px 6px; margin-bottom:14px; display:flex; flex-direction:column; box-shadow:0 1px 3px rgba(0,0,0,0.03);
   }
   .dotplot-wrap svg{flex:1 1 auto;min-height:0;width:100%;max-height:220px;display:block;}
-  .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:10px; color:var(--muted); padding:4px 2px 2px;}
-  .legend span{display:inline-flex; align-items:center; gap:4px;}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-size:13px; font-weight:500; color:var(--ink); padding:6px 2px 2px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
 
-  .row{flex:0 0 auto!important;display:flex;gap:8px;margin-bottom:8px;min-height:220px;align-items:stretch}
+  .row{flex:0 0 auto!important;display:flex;gap:14px;margin-bottom:14px;min-height:300px;align-items:stretch;}
 
   .cm-card{
-    flex:1.15 1 0;min-width:0;height:220px;background:var(--panel);border:1px solid var(--border);border-radius:12px;
-    padding:8px;display:flex;flex-direction:column;overflow:hidden;
+    flex:1.15 1 0;min-width:0;height:300px;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:14px 16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);
   }
-  .cm-title{font-size:11px; font-weight:700; margin-bottom:2px;}
-  .cm-sub{font-size:7.5px; color:var(--muted); margin-bottom:6px; line-height:1.25;}
+  .cm-title{font-size:16px; font-weight:700; margin-bottom:2px; color:var(--ink);}
+  .cm-sub{font-size:12px; color:var(--muted); margin-bottom:8px; line-height:1.35;}
   .cm-grid{
-    flex:1; display:grid; grid-template-columns:26px 1fr 1fr; grid-template-rows:auto 1fr 1fr;
-    gap:3px;
+    flex:1; display:grid; grid-template-columns:46px 1fr 1fr; grid-template-rows:auto 1fr 1fr;
+    gap:5px;
   }
   .cm-corner{}
-  .cm-colhead{font-size:7.5px; color:var(--muted); text-align:center; line-height:1.15; align-self:end; padding-bottom:1px;}
-  .cm-rowhead{font-size:7.5px; color:var(--muted); display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.15;}
+  .cm-colhead{font-size:12px; font-weight:600; color:var(--muted); text-align:center; line-height:1.3; align-self:end; padding-bottom:3px;}
+  .cm-rowhead{font-size:12px; font-weight:600; color:var(--muted); display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.3;}
   .quad{
-    border-radius:9px; padding:4px 2px; text-align:center; position:relative;
+    border-radius:10px; padding:6px 4px; text-align:center; position:relative;
     border:1px solid rgba(0,0,0,.06); display:flex; flex-direction:column; justify-content:center; align-items:center;
   }
-  .quad .code{font-size:8px; font-weight:700; letter-spacing:.3px; opacity:.85;}
-  .quad .n{font-size:15px; font-weight:800; line-height:1.1;}
-  .quad .l{font-size:7px; color:#000000; margin-top:1px; line-height:1.15;}
-  .quad.tp{background:rgba(0,179,0,.15);} 
-  .quad.fp{background:rgba(230,0,0,.15);} 
-  .quad.fn{background:rgba(230,0,0,.15);} 
-  .quad.tn{background:rgba(0,179,0,.15);} 
+  .quad .code{font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:.3px; opacity:.9;}
+  .quad .n{font-family:var(--font-mono); font-size:24px; font-weight:700; line-height:1.1;}
+  .quad .l{font-size:12px; font-weight:500; color:var(--ink); margin-top:2px; line-height:1.2;}
+  .quad.tp{background:rgba(22,163,74,.13);} 
+  .quad.fp{background:rgba(220,38,38,.13);} 
+  .quad.fn{background:rgba(220,38,38,.13);} 
+  .quad.tn{background:rgba(22,163,74,.13);} 
 
   .roc-card{
-    flex:1 1 0;min-width:0;height:220px;background:var(--panel);border:1px solid var(--border);border-radius:12px;
-    padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+    flex:1 1 0;min-width:0;height:300px;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);
   }
   .roc-card svg{width:100%; height:100%; touch-action:none; cursor:grab;}
   .roc-card svg:active{cursor:grabbing;}
 
+  .metrics-title{font-size:16px; font-weight:700; margin:0 0 6px; color:var(--ink);}
   .metrics{
-    flex:0 0 auto; display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:12px;
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:14px;
   }
   .metric{
-    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
-    padding:6px 2px; text-align:center;
+    background:var(--panel2); border:1px solid var(--border); border-radius:12px;
+    padding:10px 4px; text-align:center; display:flex; flex-direction:column; justify-content:space-between;
   }
-  .metric .lbl{font-size:8.5px; color:var(--muted); font-weight:700;}
-  .metric .def{font-size:6.3px; color:var(--muted); line-height:1.2; margin-top:1px; min-height:15px;}
-  .metric .val{font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px;}
-  .metric .unit{font-size:7px; color:var(--muted); margin-top:1px;}
-  .metrics-title{font-size:11px; font-weight:700; margin:0 0 4px;}
+  .metric .lbl{font-size:12px; color:var(--muted); font-weight:600;}
+  .metric .def{font-size:11px; color:#64748b; line-height:1.3; margin-top:2px; min-height:28px;}
+  .metric .val{font-family:var(--font-mono); font-size:22px; font-weight:700; margin-top:3px; color:var(--ink);}
+  .metric .unit{font-size:10px; color:var(--muted); margin-top:1px;}
 
-  .math-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
-  .math-card h2{font-size:16px;margin:0;font-weight:700;}
-  .math-card p{font-size:12px;margin:4px 0 12px;color:var(--muted);line-height:1.45;}
+  .math-card{
+    flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
+  }
+  .math-card h2{font-size:17px;margin:0;font-weight:700;color:var(--ink);}
+  .math-card p{font-size:13.5px;margin:6px 0 14px;color:var(--muted);line-height:1.55;}
+  .current-pair-badge{
+    font-family:var(--font-mono); font-size:13px; font-weight:600;
+    background:var(--panel2); border:1px solid var(--border); padding:5px 12px; border-radius:8px; color:var(--ink);
+  }
   .math-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-  @media (max-width:768px){.math-grid{grid-template-columns:1fr;}}
-  .math-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;}
+  .math-box{
+    background:var(--panel2);border:1px solid var(--border);border-radius:12px;
+    padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;
+  }
   .math-box.highlight{background:#faf5ff;border-color:#d8b4fe;}
-  .math-box-title{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
-  .math-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-family:'IBM Plex Mono','Cascadia Code',Consolas,monospace;font-size:13px;font-variant-numeric:tabular-nums;margin:6px 0;}
-  .math-sym{font-weight:700;}
-  .math-op{color:var(--muted);font-size:13px;padding:0 1px;}
-  .math-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 2px;}
+  .math-box-title{font-size:13.5px;font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;color:var(--ink);}
+  .math-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-family:var(--font-mono);font-size:14px;font-variant-numeric:tabular-nums;margin:6px 0;}
+  .math-sym{font-weight:700;color:var(--ink);}
+  .math-op{color:var(--muted);font-size:14px;padding:0 1px;}
+  .math-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 2px;font-size:13px;}
   .math-frac .num{border-bottom:1.5px solid var(--ink);padding:0 4px 1px;text-align:center;width:100%;}
   .math-frac .denom{padding:1px 4px 0;text-align:center;width:100%;}
-  .math-result{font-weight:800;font-size:14px;color:var(--ink);}
-  .math-pct{font-size:11px;color:var(--muted);font-weight:600;}
-  .math-desc{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;}
+  .math-result{font-weight:700;font-size:15px;color:var(--ink);}
+  .math-pct{font-size:12px;color:var(--muted);font-weight:600;}
+  .math-desc{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45;}
   .math-desc b{color:var(--ink);}
   .c-tp{color:var(--pos);font-weight:700;}
   .c-tn{color:var(--pos);font-weight:700;}
   .c-fp{color:var(--neg);font-weight:700;}
   .c-fn{color:var(--neg);font-weight:700;}
-  .c-coord{color:#7e22ce;font-weight:800;}
+  .c-coord{color:#7e22ce;font-weight:700;}
 
-  .multi-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}.multi-card h2{font-size:15px;margin:0 0 5px}.multi-card p{font-size:12px;margin:0 0 8px;color:var(--muted)}.multi-card svg{width:100%;height:260px;display:block}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
-  body{max-width:1100px;margin:0 auto;padding:20px 24px 32px}.head{margin-bottom:14px}.head h1{font-size:22px}.head p{font-size:14px}.thresh-bar{padding:16px 18px;margin-bottom:14px}.thresh-top label{font-size:14px}.thresh-val{font-size:22px}.dotplot-wrap{flex:0 0 280px;padding:12px 14px 6px;margin-bottom:14px}.legend{font-size:12px;gap:14px}.row{gap:14px;margin-bottom:14px;min-height:280px}.cm-card,.roc-card{height:280px;border-radius:14px;padding:12px}.cm-title,.metrics-title{font-size:14px}.cm-sub{font-size:10px}.cm-colhead,.cm-rowhead{font-size:9px}.quad .code{font-size:10px}.quad .n{font-size:22px}.quad .l{font-size:9px}.metrics{gap:10px;grid-template-columns:repeat(6,1fr);margin-bottom:14px;}.metric{padding:10px 4px}.metric .lbl{font-size:11px}.metric .def{font-size:8px;min-height:20px}.metric .val{font-size:22px}
-  @media (max-width:850px){.metrics{grid-template-columns:repeat(3,1fr);}}
-  @media (max-width:560px){body{padding:14px 12px 24px}.head h1{font-size:18px}.head p{font-size:12px}.thresh-bar{padding:12px 14px}.dotplot-wrap{flex-basis:240px}.row{display:flex!important;flex-direction:column!important;min-height:0}.cm-card{display:flex!important;visibility:visible!important;order:1;width:100%;height:300px;min-height:300px;overflow:visible}.roc-card{display:flex!important;order:2;width:100%;height:240px;min-height:240px;overflow:hidden}.cm-grid{min-height:210px}.multi-card{padding:12px;overflow:hidden}.multi-card h2{font-size:14px}.multi-card p{font-size:11px}.multi-card svg{height:200px}.multi-table{font-size:10px}.multi-table th,.multi-table td{padding:6px 3px}.metrics{grid-template-columns:repeat(2,1fr)}.head p{max-width:100%}.table-card{padding:12px;}.roc-table{font-size:10px;}.roc-table th,.roc-table td{padding:5px 3px;}}
-  @media (min-height:760px){.head h1{font-size:16px;}.thresh-val{font-size:16px;}}
+  .multi-card{
+    flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
+  }
+  .multi-card h2{font-size:17px;margin:0 0 5px;font-weight:700;color:var(--ink);}
+  .multi-card p{font-size:13px;margin:0 0 10px;color:var(--muted);line-height:1.5;}
+  .multi-card svg{width:100%;height:260px;display:block;}
+  .multi-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  .multi-table th,.multi-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--font-mono);}
+  .multi-table th{font-family:var(--font-main);font-weight:600;color:var(--muted);font-size:12.5px;}
+  .multi-table th:first-child,.multi-table td:first-child{text-align:left;font-family:var(--font-main);font-weight:600;}
+
+  .row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
+
+  @media (max-width:900px){
+    .metrics{grid-template-columns:repeat(3,1fr);}
+  }
+  @media (max-width:640px){
+    body{padding:14px 12px 28px;}
+    .head h1{font-size:20px;}
+    .head p{font-size:12.5px;}
+    .thresh-bar{padding:12px 14px;}
+    .dotplot-wrap{flex-basis:240px;}
+    .row{display:flex!important;flex-direction:column!important;min-height:0;gap:12px;}
+    .cm-card{display:flex!important;visibility:visible!important;order:1;width:100%;height:320px;min-height:320px;}
+    .roc-card{display:flex!important;order:2;width:100%;height:260px;min-height:260px;}
+    .metrics{grid-template-columns:repeat(2,1fr);}
+    .math-grid{grid-template-columns:1fr;}
+    .multi-table{font-size:12px;}
+    .multi-table th,.multi-table td{padding:6px 4px;}
+  }
 </style>
 </head>
 <body>
@@ -232,7 +280,7 @@
     <div class="metric" style="border-color:#d8b4fe; background:#faf5ff;">
       <div class="lbl" style="color:#7e22ce;">คู่อันดับ (FPR, TPR)</div>
       <div class="def">พิกัดจุด (X, Y) บนกราฟ ROC</div>
-      <div class="val" id="mCoord" style="color:#7e22ce; font-size:16px;">-</div>
+      <div class="val" id="mCoord" style="color:#7e22ce; font-size:18px;">-</div>
     </div>
   </div>
 
@@ -252,7 +300,7 @@
       <div class="math-box highlight">
         <div class="math-box-title">
           <span>1. TPR (True Positive Rate / Recall / Sensitivity)</span>
-          <span style="color:#7e22ce; font-size:11px;">แกน Y บนกราฟ ROC</span>
+          <span style="color:#7e22ce; font-size:12.5px; font-weight:600;">แกน Y บนกราฟ ROC</span>
         </div>
         <div class="math-row">
           <span class="math-sym">TPR</span>
@@ -282,7 +330,7 @@
       <div class="math-box highlight">
         <div class="math-box-title">
           <span>2. FPR (False Positive Rate / Fall-out)</span>
-          <span style="color:#7e22ce; font-size:11px;">แกน X บนกราฟ ROC</span>
+          <span style="color:#7e22ce; font-size:12.5px; font-weight:600;">แกน X บนกราฟ ROC</span>
         </div>
         <div class="math-row">
           <span class="math-sym">FPR</span>
@@ -312,7 +360,7 @@
       <div class="math-box highlight">
         <div class="math-box-title">
           <span>3. คู่อันดับพิกัดฉาก 2 มิติ (FPR, TPR)</span>
-          <span style="color:#7e22ce; font-size:11px;">พล็อตจุดบน ROC Curve</span>
+          <span style="color:#7e22ce; font-size:12.5px; font-weight:600;">พล็อตจุดบน ROC Curve</span>
         </div>
         <div class="math-row">
           <span class="math-sym">(x, y)</span>
@@ -340,7 +388,7 @@
       <div class="math-box">
         <div class="math-box-title">
           <span>4. Precision (ความแม่นยำของการทายว่าลาออก)</span>
-          <span style="color:var(--muted); font-size:11px;">TP / (TP + FP)</span>
+          <span style="color:var(--muted); font-size:12.5px; font-weight:600;">TP / (TP + FP)</span>
         </div>
         <div class="math-row">
           <span class="math-sym">Prec</span>
@@ -370,7 +418,7 @@
       <div class="math-box">
         <div class="math-box-title">
           <span>5. Accuracy (ความถูกต้องโดยรวมทั้งหมด)</span>
-          <span style="color:var(--muted); font-size:11px;">(TP + TN) / Total</span>
+          <span style="color:var(--muted); font-size:12.5px; font-weight:600;">(TP + TN) / Total</span>
         </div>
         <div class="math-row">
           <span class="math-sym">Acc</span>
@@ -400,7 +448,7 @@
       <div class="math-box">
         <div class="math-box-title">
           <span>6. F1-Score (ค่าเฉลี่ยฮาร์โมนิก Precision & Recall)</span>
-          <span style="color:var(--muted); font-size:11px;">2·(P·R)/(P+R)</span>
+          <span style="color:var(--muted); font-size:12.5px; font-weight:600;">2·(P·R)/(P+R)</span>
         </div>
         <div class="math-row">
           <span class="math-sym">F1</span>
@@ -502,7 +550,7 @@ function drawDotPlot(threshold){
 
     for (let t=0; t<=1.0001; t+=0.2){
       const x = xForScore(t);
-      const lbl = el('text', {x, y:padT+chartH+12, 'text-anchor':'middle','font-size':'9', fill:'#000000'});
+      const lbl = el('text', {x, y:padT+chartH+12, 'text-anchor':'middle', 'font-size':'10.5', 'font-family':'var(--font-mono)', fill:'#475569'});
       lbl.textContent = t.toFixed(1);
       svg.appendChild(lbl);
     }
@@ -594,41 +642,41 @@ function drawRocPoint(threshold, tprfpr){
 
   if (!rocCache) {
     svg.innerHTML = "";
-    const title = el('text', {x:W/2, y:14, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700', fill:'#000000'});
+    const title = el('text', {x:W/2, y:15, 'text-anchor':'middle', 'font-size':'12', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)'});
     title.textContent = 'ROC curve (ลากจุดได้)';
     svg.appendChild(title);
 
     for (let g=0; g<=1.0001; g+=0.2){
       const gx = padL + g*plotW;
       const gy = padT + (1-g)*plotH;
-      svg.appendChild(el('line', {x1:gx, y1:padT, x2:gx, y2:padT+plotH, stroke:'#eef0f4', 'stroke-width':1}));
-      svg.appendChild(el('line', {x1:padL, y1:gy, x2:padL+plotW, y2:gy, stroke:'#eef0f4', 'stroke-width':1}));
-      const xl = el('text', {x:gx, y:padT+plotH+12, 'text-anchor':'middle', 'font-size':'8', fill:'#000000'});
+      svg.appendChild(el('line', {x1:gx, y1:padT, x2:gx, y2:padT+plotH, stroke:'#e2e8f0', 'stroke-width':1}));
+      svg.appendChild(el('line', {x1:padL, y1:gy, x2:padL+plotW, y2:gy, stroke:'#e2e8f0', 'stroke-width':1}));
+      const xl = el('text', {x:gx, y:padT+plotH+12, 'text-anchor':'middle', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
       xl.textContent = g.toFixed(1); svg.appendChild(xl);
-      const yl = el('text', {x:padL-5, y:gy+3, 'text-anchor':'end', 'font-size':'8', fill:'#000000'});
+      const yl = el('text', {x:padL-5, y:gy+3, 'text-anchor':'end', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
       yl.textContent = g.toFixed(1); svg.appendChild(yl);
     }
 
-    svg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#000000', 'stroke-width':1}));
-    svg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#000000', 'stroke-width':1}));
+    svg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+    svg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
 
     const pts = rocCurvePoints();
     const path = pts.map((p,i)=>{
       const x = padL + p[0]*plotW, y = padT + (1-p[1])*plotH;
       return (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1);
     }).join(' ');
-    svg.appendChild(el('path', {d:path, stroke:'#a200ff', 'stroke-width':2, fill:'none'}));
+    svg.appendChild(el('path', {d:path, stroke:'#9333ea', 'stroke-width':2.2, fill:'none'}));
 
     rocCache = {
-      circle: el('circle', {r:7, fill:'#ff1493', stroke:'#ffffff', 'stroke-width':1.5}),
-      coordText: el('text', {'font-size': '8.5', 'font-weight': '700', fill: '#ff1493', 'pointer-events': 'none'})
+      circle: el('circle', {r:7, fill:'#e11d48', stroke:'#ffffff', 'stroke-width':2}),
+      coordText: el('text', {'font-size': '10', 'font-weight': '700', 'font-family':'var(--font-mono)', fill: '#e11d48', 'pointer-events': 'none'})
     };
     svg.appendChild(rocCache.circle);
     svg.appendChild(rocCache.coordText);
 
-    const xt = el('text', {x:padL+plotW/2, y:H-2, 'text-anchor':'middle', 'font-size':'10', fill:'#000000'});
+    const xt = el('text', {x:padL+plotW/2, y:H-3, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)'});
     xt.textContent = 'FPR'; svg.appendChild(xt);
-    const yt = el('text', {x:10, y:padT+plotH/2, 'text-anchor':'middle', 'font-size':'10', fill:'#000000', transform:`rotate(-90 10 ${padT+plotH/2})`});
+    const yt = el('text', {x:11, y:padT+plotH/2, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)', transform:`rotate(-90 11 ${padT+plotH/2})`});
     yt.textContent = 'TPR'; svg.appendChild(yt);
   }
 
@@ -677,7 +725,7 @@ function drawMulti(t){
   for(let g=0;g<=1;g+=.2){const x=L+g*PW,y=T+(1-g)*PH;svg.appendChild(e('line',{x1:x,y1:T,x2:x,y2:T+PH,stroke:'#e2e5eb'}));svg.appendChild(e('line',{x1:L,y1:y,x2:L+PW,y2:y,stroke:'#e2e5eb'}));}
   svg.appendChild(e('line',{x1:L,y1:T+PH,x2:L+PW,y2:T,stroke:'#999','stroke-dasharray':'3,3'}));let aucs=[];
   for(let c=0;c<3;c++){const auc=multiAuc(c);aucs.push(auc);let pts=[];for(let i=0;i<=200;i++){const t0=1-i/200;let tp=0,fp=0,pos=0,neg=0;multiData.forEach(d=>{const y=d.label===c,p=d.scores[c]>=t0;if(y)pos++;else neg++;if(p&&y)tp++;else if(p)fp++;});pts.push([fp/neg,tp/pos]);}const d=pts.map((p,i)=>(i?'L':'M')+(L+p[0]*PW)+' '+(T+(1-p[1])*PH)).join(' ');svg.appendChild(e('path',{d,fill:'none',stroke:multiColors[c],'stroke-width':2}));const y0=multiData.filter(d=>d.label===c).length, n0=multiData.length-y0;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;});svg.appendChild(e('circle',{cx:L+(fp/n0)*PW,cy:T+(1-tp/y0)*PH,r:4,fill:multiColors[c]}));}
-  const axis= e('text',{x:W/2,y:H-2,'text-anchor':'middle',fill:'#000','font-size':10});axis.textContent='FPR →';svg.appendChild(axis);
+  const axis= e('text',{x:W/2,y:H-3,'text-anchor':'middle',fill:'var(--ink)','font-size':'11','font-weight':'600','font-family':'var(--font-main)'});axis.textContent='FPR →';svg.appendChild(axis);
   document.getElementById('multiRows').innerHTML=aucs.map((a,c)=>{const m=multiAt(c,t);return `<tr><td style="color:${multiColors[c]}">Class ${c+1}</td><td>${a.toFixed(3)}</td><td>${(m.p*100).toFixed(1)}%</td><td>${(m.r*100).toFixed(1)}%</td></tr>`;}).join('');
 }
 
