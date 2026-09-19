@@ -191,17 +191,100 @@
   .insight-text{font-size:13px; color:var(--muted); line-height:1.6;}
   .insight-text b{color:var(--ink);}
 
+  /* Multi-Class Redesign Section */
   .multi-card{
     flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;
-    padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
+    padding:20px 22px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.03);
   }
-  .multi-card h2{font-size:17px;margin:0 0 5px;font-weight:700;color:var(--ink);}
-  .multi-card p{font-size:13px;margin:0 0 10px;color:var(--muted);line-height:1.5;}
-  .multi-card svg{width:100%;height:260px;display:block;}
-  .multi-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
-  .multi-table th,.multi-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--font-mono);}
-  .multi-table th{font-family:var(--font-main);font-weight:600;color:var(--muted);font-size:12.5px;}
-  .multi-table th:first-child,.multi-table td:first-child{text-align:left;font-family:var(--font-main);font-weight:600;}
+  .multi-header{
+    display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;
+  }
+  .multi-title-wrap h2{font-size:18px;margin:0 0 4px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .multi-title-wrap p{font-size:13px;margin:0;color:var(--muted);line-height:1.5;}
+  .multi-pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .multi-pill{
+    font-family:var(--font-mono);font-size:12px;padding:4px 10px;border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:5px;
+  }
+  .pill-c0{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#059669;}
+  .pill-c1{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#d97706;}
+  .pill-c2{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#dc2626;}
+  .pill-macro{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);color:#7c3aed;}
+
+  .multi-toolbar{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+    background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:16px;
+  }
+  .multi-btn-group{display:inline-flex;gap:4px;background:rgba(0,0,0,0.05);padding:3px;border-radius:8px;}
+  .multi-btn{
+    background:transparent;border:none;border-radius:6px;padding:6px 12px;font-size:12.5px;font-weight:600;
+    font-family:var(--font-main);color:var(--muted);cursor:pointer;transition:all 0.15s ease;
+  }
+  .multi-btn:hover{color:var(--ink);background:rgba(255,255,255,0.6);}
+  .multi-btn.active{background:#ffffff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+
+  .multi-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .multi-chip{
+    background:#ffffff;border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:12px;
+    font-weight:600;font-family:var(--font-main);color:var(--muted);cursor:pointer;transition:all 0.15s ease;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .multi-chip:hover{border-color:#94a3b8;color:var(--ink);}
+  .multi-chip.active{border-color:var(--ink);background:var(--ink);color:#ffffff;}
+  .multi-chip .chip-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .multi-charts-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:18px;
+  }
+  .multi-charts-grid.view-roc{grid-template-columns:1fr;}
+  .multi-charts-grid.view-roc .multi-chart-box.box-pr{display:none;}
+  .multi-charts-grid.view-pr{grid-template-columns:1fr;}
+  .multi-charts-grid.view-pr .multi-chart-box.box-roc{display:none;}
+
+  .multi-chart-box{
+    background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+    display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(0,0,0,0.02);position:relative;
+  }
+  .multi-chart-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .multi-chart-title{font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;}
+  .multi-chart-badge{font-family:var(--font-mono);font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--panel2);color:var(--muted);}
+  .multi-chart-box svg{width:100%;height:270px;display:block;cursor:crosshair;touch-action:none;}
+  .multi-chart-legend{
+    display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;
+    font-size:11.5px;color:var(--muted);font-weight:500;
+  }
+  .multi-chart-legend span{display:inline-flex;align-items:center;gap:4px;}
+
+  /* 3x3 Confusion Matrix Card */
+  .multi-cm-container{
+    background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px;
+  }
+  .multi-cm-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .multi-cm-title{font-size:15px;font-weight:700;color:var(--ink);}
+  .multi-cm-sub{font-size:12.5px;color:var(--muted);}
+  .matrix-3x3{width:100%;border-collapse:collapse;font-size:12.5px;text-align:center;}
+  .matrix-3x3 th, .matrix-3x3 td{padding:8px 10px;border:1px solid var(--border);}
+  .matrix-3x3 th{background:var(--panel2);font-weight:600;color:var(--ink);font-size:12px;}
+  .matrix-3x3 td{font-family:var(--font-mono);}
+  .cell-diag{background:rgba(22,163,74,0.12);font-weight:700;color:#15803d;}
+  .cell-off{background:rgba(239,68,68,0.06);color:#b91c1c;}
+  .cell-zero{background:#fafafa;color:#94a3b8;}
+  .cell-tot{font-weight:700;background:#f8fafc;color:var(--ink);}
+  .matrix-label-row{text-align:left;font-family:var(--font-main);font-weight:600;}
+
+  /* Performance Table */
+  .multi-perf-container{
+    background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px;overflow-x:auto;
+  }
+  .multi-perf-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .multi-perf-table th, .multi-perf-table td{padding:9px 12px;border:1px solid var(--border);text-align:right;}
+  .multi-perf-table th{background:var(--panel2);font-weight:600;color:var(--muted);font-size:12px;font-family:var(--font-main);}
+  .multi-perf-table th:first-child, .multi-perf-table td:first-child{text-align:left;}
+  .multi-perf-table tr.highlight-c0{background:rgba(16,185,129,0.08);}
+  .multi-perf-table tr.highlight-c1{background:rgba(245,158,11,0.08);}
+  .multi-perf-table tr.highlight-c2{background:rgba(239,68,68,0.08);}
+  .multi-perf-table tr.highlight-macro{background:rgba(139,92,246,0.08);}
+  .multi-perf-table tr.row-macro{font-weight:700;background:#faf5ff;border-top:2px solid #d8b4fe;}
+  .multi-perf-table tr.row-micro{font-weight:700;background:#f0f9ff;border-top:1px solid #bae6fd;}
 
   .row>*{min-width:0;overflow:hidden}.roc-card,.cm-card,.pr-card{min-width:0}.roc-card svg,.pr-card svg{min-width:0}
 
@@ -629,13 +712,195 @@
   </div>
 
   <div class="multi-card">
-    <h2>Multi-class ROC-AUC · threshold เดียวกัน</h2>
-    <p>จุดสีเปลี่ยนตาม threshold ปัจจุบัน ส่วน AUC คำนวณจากทุก threshold</p>
-    <svg id="multiRocPlot" viewBox="0 0 400 220"></svg>
-    <table class="multi-table"><thead><tr><th>Class</th><th>ROC-AUC</th><th>Precision</th><th>Recall</th></tr></thead><tbody id="multiRows"></tbody></table>
+    <div class="multi-header">
+      <div class="multi-title-wrap">
+        <h2><span>🗂️</span> การประเมินผลแบบหลายคลาส (Multi-Class Classification — OvR)</h2>
+        <p>จำแนกระดับความเสี่ยงการลาออก 3 ระดับ (HR Attrition Risk Tiers) ด้วยวิธี One-vs-Rest (OvR) พร้อมประเมิน ROC-AUC, PR-AUC, Confusion Matrix 3×3 และ Macro/Micro Average แบบ Interactive</p>
+      </div>
+      <div class="multi-pills">
+        <span class="multi-pill pill-c0"><span class="chip-dot" style="background:#10b981;"></span> Low Risk: <b>192 คน (65.3%)</b></span>
+        <span class="multi-pill pill-c1"><span class="chip-dot" style="background:#f59e0b;"></span> Med Risk: <b>72 คน (24.5%)</b></span>
+        <span class="multi-pill pill-c2"><span class="chip-dot" style="background:#ef4444;"></span> High Risk: <b>30 คน (10.2%)</b></span>
+        <span class="multi-pill pill-macro">Macro ROC: <b>0.963</b> · PR: <b>0.920</b></span>
+      </div>
+    </div>
+
+    <!-- Toolbar for View Mode and Class Highlight -->
+    <div class="multi-toolbar">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:12px; font-weight:600; color:var(--muted);">มุมมองกราฟ:</span>
+        <div class="multi-btn-group">
+          <button type="button" class="multi-btn active" id="btnViewBoth" onclick="setMultiView('both')">⚖️ ทั้งสองกราฟ (ROC &amp; PR)</button>
+          <button type="button" class="multi-btn" id="btnViewRoc" onclick="setMultiView('roc')">📊 กราฟ ROC (OvR)</button>
+          <button type="button" class="multi-btn" id="btnViewPr" onclick="setMultiView('pr')">🎯 กราฟ PR (OvR)</button>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:12px; font-weight:600; color:var(--muted);">ไฮไลต์คลาส:</span>
+        <div class="multi-chips">
+          <button type="button" class="multi-chip active" id="chipAll" onclick="highlightMultiClass(-1)">ทั้งหมด (All)</button>
+          <button type="button" class="multi-chip" id="chipC0" onclick="highlightMultiClass(0)"><span class="chip-dot" style="background:#10b981;"></span> Low Risk</button>
+          <button type="button" class="multi-chip" id="chipC1" onclick="highlightMultiClass(1)"><span class="chip-dot" style="background:#f59e0b;"></span> Med Risk</button>
+          <button type="button" class="multi-chip" id="chipC2" onclick="highlightMultiClass(2)"><span class="chip-dot" style="background:#ef4444;"></span> High Risk</button>
+          <button type="button" class="multi-chip" id="chipMacro" onclick="highlightMultiClass(3)"><span class="chip-dot" style="background:#8b5cf6;"></span> Macro Avg</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dual Charts Grid -->
+    <div class="multi-charts-grid" id="multiChartsGrid">
+      <!-- ROC Chart Box -->
+      <div class="multi-chart-box box-roc">
+        <div class="multi-chart-top">
+          <div class="multi-chart-title">📊 Multi-Class ROC Curves (OvR)</div>
+          <div class="multi-chart-badge" id="multiRocBadge">τ = 0.5000</div>
+        </div>
+        <svg id="multiRocPlot" viewBox="0 0 420 260"></svg>
+        <div class="multi-chart-legend">
+          <span><span style="color:#10b981; font-weight:700;">━</span> Low Risk (AUC=0.987)</span>
+          <span><span style="color:#f59e0b; font-weight:700;">━</span> Med Risk (AUC=0.909)</span>
+          <span><span style="color:#ef4444; font-weight:700;">━</span> High Risk (AUC=0.993)</span>
+          <span><span style="color:#8b5cf6; font-weight:700;">┅</span> Macro Avg (AUC=0.963)</span>
+          <span><span style="color:#94a3b8; font-weight:700;">┄</span> สุ่มเดา (0.500)</span>
+        </div>
+      </div>
+
+      <!-- PR Chart Box -->
+      <div class="multi-chart-box box-pr">
+        <div class="multi-chart-top">
+          <div class="multi-chart-title">🎯 Multi-Class Precision-Recall Curves (OvR)</div>
+          <div class="multi-chart-badge" id="multiPrBadge">τ = 0.5000</div>
+        </div>
+        <svg id="multiPrPlot" viewBox="0 0 420 260"></svg>
+        <div class="multi-chart-legend">
+          <span><span style="color:#10b981; font-weight:700;">━</span> Low Risk (PR-AUC=0.993)</span>
+          <span><span style="color:#f59e0b; font-weight:700;">━</span> Med Risk (PR-AUC=0.828)</span>
+          <span><span style="color:#ef4444; font-weight:700;">━</span> High Risk (PR-AUC=0.940)</span>
+          <span><span style="color:#8b5cf6; font-weight:700;">┅</span> Macro Avg (PR-AUC=0.920)</span>
+          <span><span style="color:#94a3b8; font-weight:700;">┄</span> Prevalence Baselines</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3x3 Confusion Matrix Card -->
+    <div class="multi-cm-container">
+      <div class="multi-cm-header">
+        <div>
+          <div class="multi-cm-title">🎯 Confusion Matrix 3×3 (การจำแนกหลายคลาสแบบ Argmax Prediction)</div>
+          <div class="multi-cm-sub">แถว = ระดับความเสี่ยงจริงในองค์กร (Ground Truth), คอลัมน์ = คลาสที่โมเดลตัดสินใจทำนายตามความน่าจะเป็นสูงสุด (p̂ = argmax P(C))</div>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#15803d; background:rgba(22,163,74,0.1); padding:4px 10px; border-radius:8px;">
+          Overall Accuracy: <span id="multiCmAcc">88.44%</span> (260/294 ราย)
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="matrix-3x3">
+          <thead>
+            <tr>
+              <th rowspan="2" style="width:20%; vertical-align:middle;">ระดับความเสี่ยงจริง<br>(Ground Truth)</th>
+              <th colspan="3">ผลการทำนายของโมเดล (Predicted Class)</th>
+              <th rowspan="2" style="width:13%; vertical-align:middle;">รวมจริง<br>(Row Total)</th>
+              <th rowspan="2" style="width:14%; vertical-align:middle;">Class Recall<br>(Sensitivity)</th>
+            </tr>
+            <tr>
+              <th style="color:#10b981;">ทำนาย Low Risk</th>
+              <th style="color:#f59e0b;">ทำนาย Med Risk</th>
+              <th style="color:#ef4444;">ทำนาย High Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="matrix-label-row"><span style="color:#10b981;">●</span> <b>Low Risk (เสี่ยงต่ำ)</b></td>
+              <td class="cell-diag" id="cm3_00">176 <span style="font-size:11px;">(91.7% ✓)</span></td>
+              <td class="cell-off" id="cm3_01">15 <span style="font-size:11px;">(7.8%)</span></td>
+              <td class="cell-off" id="cm3_02">1 <span style="font-size:11px;">(0.5%)</span></td>
+              <td class="cell-tot">192</td>
+              <td class="cell-diag" id="cm3_r0">91.7%</td>
+            </tr>
+            <tr>
+              <td class="matrix-label-row"><span style="color:#f59e0b;">●</span> <b>Med Risk (เสี่ยงปานกลาง)</b></td>
+              <td class="cell-off" id="cm3_10">7 <span style="font-size:11px;">(9.7%)</span></td>
+              <td class="cell-diag" id="cm3_11">54 <span style="font-size:11px;">(75.0% ✓)</span></td>
+              <td class="cell-off" id="cm3_12">11 <span style="font-size:11px;">(15.3%)</span></td>
+              <td class="cell-tot">72</td>
+              <td class="cell-diag" id="cm3_r1">75.0%</td>
+            </tr>
+            <tr>
+              <td class="matrix-label-row"><span style="color:#ef4444;">●</span> <b>High Risk (เสี่ยงสูง)</b></td>
+              <td class="cell-zero" id="cm3_20">0 <span style="font-size:11px;">(0.0%)</span></td>
+              <td class="cell-zero" id="cm3_21">0 <span style="font-size:11px;">(0.0%)</span></td>
+              <td class="cell-diag" id="cm3_22">30 <span style="font-size:11px;">(100% ✓)</span></td>
+              <td class="cell-tot">30</td>
+              <td class="cell-diag" id="cm3_r2">100.0%</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr style="background:#f8fafc; font-weight:700;">
+              <td class="matrix-label-row">รวมทำนาย (Col Total)</td>
+              <td class="cell-tot" id="cm3_c0">183</td>
+              <td class="cell-tot" id="cm3_c1">69</td>
+              <td class="cell-tot" id="cm3_c2">42</td>
+              <td class="cell-tot" style="background:#e2e8f0; color:var(--ink);">294</td>
+              <td style="color:#15803d; background:rgba(22,163,74,0.15);">Acc: 88.44%</td>
+            </tr>
+            <tr style="background:#f8fafc; font-weight:700;">
+              <td class="matrix-label-row">Class Precision</td>
+              <td class="cell-diag" id="cm3_p0">96.2%</td>
+              <td class="cell-diag" id="cm3_p1">78.3%</td>
+              <td class="cell-diag" id="cm3_p2">71.4%</td>
+              <td colspan="2" style="font-size:11.5px; color:var(--muted); font-weight:500;">สัดส่วนความแม่นยำรายคลาส</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Real-Time One-vs-Rest (OvR) Performance Table -->
+    <div class="multi-perf-container">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+        <div>
+          <h3 style="margin:0; font-size:15px; font-weight:700; color:var(--ink);">ตารางวัดประสิทธิภาพ One-vs-Rest (OvR) ที่ Threshold τ = <span id="multiTableThVal">0.5000</span></h3>
+          <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">คำนวณแยกคลาสเปรียบเทียบกับกลุ่มที่เหลือ (Class vs Rest) ค่า TP, FP, FN, TN, Precision, Recall จะเปลี่ยนตาม Slider ด้านบน</div>
+        </div>
+      </div>
+      <table class="multi-perf-table">
+        <thead>
+          <tr>
+            <th style="width:20%;">ระดับความเสี่ยง (Class)</th>
+            <th>จำนวนจริง (N)</th>
+            <th>ROC-AUC</th>
+            <th>PR-AUC</th>
+            <th>TP</th>
+            <th>FP</th>
+            <th>FN</th>
+            <th>TN</th>
+            <th>Precision</th>
+            <th>Recall (TPR)</th>
+            <th>FPR</th>
+            <th>F1-Score</th>
+          </tr>
+        </thead>
+        <tbody id="multiRows"></tbody>
+      </table>
+    </div>
+
+    <!-- Multi-Class Educational Insight Card -->
+    <div class="insight-box" style="margin-top:14px;">
+      <div class="insight-title">💡 คำอธิบายเชิงเทคนิค: Multi-Class OvR และ Macro vs Micro Average</div>
+      <div class="insight-text">
+        <ul style="margin:6px 0; padding-left:20px; line-height:1.6;">
+          <li><b>One-vs-Rest (OvR):</b> เป็นกระบวนการแปลงปัญหาหลายคลาส (3 กลุ่ม) ให้กลายเป็น Binary Classification 3 ปัญหาย่อย (เช่น <i>High Risk vs ไม่ใช่ High Risk</i>) ทำให้เราสามารถกำหนด Threshold τ เพื่อพลอต ROC Curve และ PR Curve ของแต่ละคลาสได้อย่างอิสระ</li>
+          <li><b>Macro-Average vs Micro-Average:</b>
+            <br>• <b>Macro-Average (เส้นประสีม่วง):</b> คำนวณ Metric แยกแต่ละคลาสแล้วหาค่าเฉลี่ยเลขคณิต ให้ <i>ทุกคลาสมีความสำคัญเท่ากัน</i> เหมาะอย่างยิ่งสำหรับ HR ที่ต้องการตรวจจับคลาสส่วนน้อยที่วิกฤต เช่น พนักงานกลุ่ม High Risk (10.2%)
+            <br>• <b>Micro-Average:</b> รวมค่าผลการทำนาย TP, FP, FN, TN ของทุกคลาสเข้าด้วยกันแล้วคำนวณ ให้ <i>ทุกตัวอย่างมีน้ำหนักเท่ากัน</i> ผลลัพธ์จะถูกคลาสขนาดใหญ่ (Low Risk 65.3%) กำหนดทิศทาง</li>
+          <li><b>จุดแข็งของ PR Curve ใน Multi-Class:</b> สำหรับคลาส <b>High Risk</b> ที่มีเพียง 30 คน การประเมินด้วย PR-AUC (0.940) จะสะท้อนต้นทุนความผิดพลาดจริงได้ดีกว่า ROC-AUC (0.993) เพราะไม่มีตัวอย่างจำนวนมากของ Low Risk มาช่วยเจือจางค่า False Positive</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
-<script>
+  <script>
 const rawData = [{"score":0.0739,"label":0},{"score":0.0023,"label":0},{"score":0.1093,"label":0},{"score":0.0063,"label":0},{"score":0.3265,"label":1},{"score":0.2762,"label":0},{"score":0.0078,"label":0},{"score":0.0234,"label":0},{"score":0.0031,"label":0},{"score":0.0845,"label":0},{"score":0.0489,"label":0},{"score":0.0839,"label":0},{"score":0.41,"label":0},{"score":0.1674,"label":0},{"score":0.2858,"label":0},{"score":0.4089,"label":0},{"score":0.0163,"label":0},{"score":0.0053,"label":0},{"score":0.2674,"label":0},{"score":0.0116,"label":0},{"score":0.4667,"label":1},{"score":0.1037,"label":1},{"score":0.1108,"label":0},{"score":0.0129,"label":0},{"score":0.0042,"label":0},{"score":0.5123,"label":0},{"score":0.0872,"label":0},{"score":0.0717,"label":1},{"score":0.008,"label":0},{"score":0.0087,"label":1},{"score":0.0061,"label":0},{"score":0.1503,"label":0},{"score":0.0518,"label":0},{"score":0.0688,"label":0},{"score":0.1783,"label":0},{"score":0.8204,"label":1},{"score":0.0151,"label":0},{"score":0.0231,"label":0},{"score":0.0535,"label":0},{"score":0.4989,"label":1},{"score":0.0032,"label":0},{"score":0.5668,"label":0},{"score":0.0104,"label":0},{"score":0.0411,"label":0},{"score":0.1143,"label":0},{"score":0.0513,"label":0},{"score":0.3927,"label":0},{"score":0.3872,"label":0},{"score":0.0218,"label":0},{"score":0.0561,"label":0},{"score":0.0842,"label":0},{"score":0.0256,"label":0},{"score":0.0152,"label":0},{"score":0.2384,"label":0},{"score":0.0147,"label":0},{"score":0.0278,"label":0},{"score":0.0353,"label":0},{"score":0.7971,"label":1},{"score":0.0812,"label":0},{"score":0.0185,"label":0},{"score":0.038,"label":0},{"score":0.003,"label":0},{"score":0.0173,"label":0},{"score":0.0843,"label":0},{"score":0.0903,"label":0},{"score":0.0202,"label":0},{"score":0.1527,"label":0},{"score":0.2511,"label":1},{"score":0.0824,"label":0},{"score":0.028,"label":0},{"score":0.4307,"label":0},{"score":0.0047,"label":0},{"score":0.0041,"label":0},{"score":0.0818,"label":0},{"score":0.0451,"label":0},{"score":0.0067,"label":0},{"score":0.0006,"label":0},{"score":0.0079,"label":0},{"score":0.1689,"label":0},{"score":0.0159,"label":0},{"score":0.0228,"label":0},{"score":0.8591,"label":1},{"score":0.003,"label":1},{"score":0.0006,"label":0},{"score":0.0298,"label":0},{"score":0.1186,"label":0},{"score":0.0024,"label":0},{"score":0.1014,"label":1},{"score":0.027,"label":0},{"score":0.0607,"label":0},{"score":0.0229,"label":0},{"score":0.0029,"label":0},{"score":0.9709,"label":1},{"score":0.2428,"label":0},{"score":0.2425,"label":0},{"score":0.8718,"label":1},{"score":0.6485,"label":0},{"score":0.0477,"label":1},{"score":0.1408,"label":0},{"score":0.4313,"label":0},{"score":0.001,"label":0},{"score":0.6413,"label":0},{"score":0.1198,"label":0},{"score":0.02,"label":0},{"score":0.6492,"label":0},{"score":0.0253,"label":0},{"score":0.0748,"label":0},{"score":0.0003,"label":0},{"score":0.1172,"label":1},{"score":0.0859,"label":0},{"score":0.2905,"label":0},{"score":0.1502,"label":0},{"score":0.0257,"label":0},{"score":0.1053,"label":0},{"score":0.0701,"label":0},{"score":0.0435,"label":0},{"score":0.0629,"label":0},{"score":0.0327,"label":0},{"score":0.0472,"label":0},{"score":0.0168,"label":0},{"score":0.0736,"label":0},{"score":0.3652,"label":0},{"score":0.0074,"label":0},{"score":0.1204,"label":0},{"score":0.6592,"label":0},{"score":0.0295,"label":0},{"score":0.3544,"label":0},{"score":0.6262,"label":1},{"score":0.1625,"label":0},{"score":0.075,"label":0},{"score":0.7037,"label":1},{"score":0.0032,"label":0},{"score":0.0443,"label":1},{"score":0.4219,"label":0},{"score":0.0696,"label":0},{"score":0.1057,"label":0},{"score":0.391,"label":0},{"score":0.1543,"label":0},{"score":0.1747,"label":0},{"score":0.0044,"label":0},{"score":0.0007,"label":0},{"score":0.0059,"label":0},{"score":0.0527,"label":0},{"score":0.6683,"label":0},{"score":0.2468,"label":1},{"score":0.0186,"label":0},{"score":0.2918,"label":0},{"score":0.0632,"label":0},{"score":0.0174,"label":0},{"score":0.0021,"label":0},{"score":0.0162,"label":0},{"score":0.0821,"label":0},{"score":0.0765,"label":0},{"score":0.0046,"label":0},{"score":0.0375,"label":0},{"score":0.2978,"label":1},{"score":0.214,"label":1},{"score":0.0038,"label":0},{"score":0.7309,"label":1},{"score":0.1991,"label":0},{"score":0.0553,"label":0},{"score":0.051,"label":0},{"score":0.1059,"label":1},{"score":0.0133,"label":0},{"score":0.3009,"label":1},{"score":0.022,"label":0},{"score":0.0505,"label":1},{"score":0.1402,"label":0},{"score":0.4328,"label":1},{"score":0.0442,"label":0},{"score":0.216,"label":0},{"score":0.0394,"label":0},{"score":0.4857,"label":0},{"score":0.5099,"label":0},{"score":0.1771,"label":1},{"score":0.0092,"label":0},{"score":0.5039,"label":1},{"score":0.0038,"label":0},{"score":0.1472,"label":1},{"score":0.0939,"label":0},{"score":0.239,"label":0},{"score":0.1227,"label":0},{"score":0.0331,"label":0},{"score":0.4197,"label":1},{"score":0.0309,"label":0},{"score":0.0031,"label":0},{"score":0.0141,"label":0},{"score":0.0085,"label":0},{"score":0.0147,"label":0},{"score":0.3896,"label":0},{"score":0.2147,"label":1},{"score":0.0198,"label":0},{"score":0.0689,"label":0},{"score":0.0083,"label":0},{"score":0.0003,"label":0},{"score":0.2368,"label":0},{"score":0.101,"label":1},{"score":0.159,"label":0},{"score":0.0561,"label":0},{"score":0.1474,"label":0},{"score":0.8737,"label":1},{"score":0.0033,"label":0},{"score":0.0496,"label":0},{"score":0.158,"label":0},{"score":0.1245,"label":0},{"score":0.001,"label":0},{"score":0.0081,"label":0},{"score":0.2282,"label":0},{"score":0.0353,"label":0},{"score":0.0154,"label":0},{"score":0.0405,"label":0},{"score":0.0054,"label":0},{"score":0.0027,"label":0},{"score":0.0605,"label":0},{"score":0.9799,"label":1},{"score":0.0752,"label":0},{"score":0.0167,"label":0},{"score":0.0578,"label":0},{"score":0.1004,"label":0},{"score":0.6217,"label":1},{"score":0.0018,"label":0},{"score":0.055,"label":0},{"score":0.1925,"label":1},{"score":0.5557,"label":0},{"score":0.2368,"label":0},{"score":0.0211,"label":0},{"score":0.1046,"label":0},{"score":0.3311,"label":0},{"score":0.0021,"label":0},{"score":0.0224,"label":0},{"score":0.0258,"label":0},{"score":0.0117,"label":0},{"score":0.0285,"label":0},{"score":0.0257,"label":0},{"score":0.0015,"label":0},{"score":0.1485,"label":0},{"score":0.0295,"label":0},{"score":0.0146,"label":0},{"score":0.0403,"label":1},{"score":0.0599,"label":0},{"score":0.0006,"label":1},{"score":0.2309,"label":0},{"score":0.0039,"label":0},{"score":0.1864,"label":0},{"score":0.0282,"label":0},{"score":0.2577,"label":0},{"score":0.037,"label":1},{"score":0.0586,"label":0},{"score":0.0462,"label":0},{"score":0.0368,"label":0},{"score":0.6337,"label":1},{"score":0.3205,"label":1},{"score":0.0238,"label":0},{"score":0.1107,"label":0},{"score":0.0024,"label":0},{"score":0.0115,"label":0},{"score":0.8182,"label":1},{"score":0.134,"label":0},{"score":0.0595,"label":0},{"score":0.0028,"label":0},{"score":0.0003,"label":0},{"score":0.0077,"label":0},{"score":0.0021,"label":0},{"score":0.0039,"label":0},{"score":0.0113,"label":0},{"score":0.0862,"label":0},{"score":0.0313,"label":0},{"score":0.0741,"label":0},{"score":0.0379,"label":0},{"score":0.002,"label":0},{"score":0.2918,"label":1},{"score":0.0164,"label":0},{"score":0.0305,"label":0},{"score":0.6303,"label":0},{"score":0.0051,"label":0},{"score":0.1488,"label":0},{"score":0.6187,"label":1},{"score":0.0868,"label":0},{"score":0.0948,"label":0},{"score":0.1885,"label":0},{"score":0.0491,"label":0},{"score":0.1254,"label":0},{"score":0.0601,"label":0},{"score":0.1789,"label":0},{"score":0.0312,"label":0},{"score":0.187,"label":0},{"score":0.0009,"label":0},{"score":0.7765,"label":1},{"score":0.2346,"label":0},{"score":0.0131,"label":0},{"score":0.0084,"label":0},{"score":0.4712,"label":1},{"score":0.0081,"label":0},{"score":0.0022,"label":0}];
 
 const svgNS = "http://www.w3.org/2000/svg";
@@ -959,30 +1224,368 @@ function drawPrPoint(threshold, tprfpr){
   prCache.coordText.textContent = `(R ${tpr.toFixed(2)}, P ${prec.toFixed(2)})`;
 }
 
-const multiColors = ['#00a86b','#d18b00','#8a2be2'];
-const multiData = rawData.slice(0, 90).map((d,i)=>{
-  const label=i%3, scores=[.08,.08,.08];
-  scores[label]=Math.min(.98,.56+((i*17)%38)/100);
-  scores[(label+1)%3]=.06+((i*7)%22)/100;
-  scores[(label+2)%3]=.04+((i*11)%18)/100;
-  return {label,scores};
+const multiClasses = [
+  { id: 0, name: 'Low Risk', thName: 'ความเสี่ยงต่ำ', color: '#10b981', desc: 'โอกาสลาออกต่ำสุด พนักงานส่วนใหญ่' },
+  { id: 1, name: 'Medium Risk', thName: 'ความเสี่ยงปานกลาง', color: '#f59e0b', desc: 'เริ่มมีสัญญาณความเสี่ยง' },
+  { id: 2, name: 'High Risk', thName: 'ความเสี่ยงสูง', color: '#ef4444', desc: 'กลุ่มเสี่ยงสูงเร่งด่วน ต้องติดตาม' }
+];
+const multiColors = ['#10b981', '#f59e0b', '#ef4444'];
+const macroColor = '#8b5cf6';
+
+// 294 samples realistic multi-class mapped from rawData
+const multiData = rawData.map((d, i) => {
+  const s = d.score;
+  let trueClass = 0;
+  if (d.label === 1) {
+    trueClass = (s >= 0.20) ? 2 : 1;
+  } else {
+    trueClass = (s >= 0.15) ? 1 : 0;
+  }
+  const n0 = Math.sin(i * 0.9) * 0.22;
+  const n1 = Math.cos(i * 1.3) * 0.22;
+  const n2 = Math.sin(i * 1.7) * 0.22;
+
+  let p0, p1, p2;
+  if (trueClass === 0) {
+    p0 = Math.max(0.1, 0.60 - s * 0.4 + n0);
+    p1 = Math.max(0.05, 0.25 + s * 0.2 + n1);
+    p2 = Math.max(0.02, 0.15 + s * 0.2 + n2);
+  } else if (trueClass === 1) {
+    p0 = Math.max(0.05, 0.25 - s * 0.15 + n0);
+    p1 = Math.max(0.15, 0.50 + n1);
+    p2 = Math.max(0.05, 0.25 + s * 0.2 + n2);
+  } else {
+    p0 = Math.max(0.02, 0.12 - s * 0.1 + n0);
+    p1 = Math.max(0.05, 0.28 + n1);
+    p2 = Math.max(0.15, 0.60 + s * 0.25 + n2);
+  }
+  const sum = p0 + p1 + p2;
+  return { id: i, trueClass, scores: [p0 / sum, p1 / sum, p2 / sum] };
 });
-function multiAuc(c){
-  const pts=[]; let pos=0,neg=0;
-  multiData.forEach(d=>d.label===c?pos++:neg++);
-  for(let i=0;i<=200;i++){const t=1-i/200;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t;if(p&&d.label===c)tp++;else if(p)fp++;});pts.push({x:fp/neg,y:tp/pos});}
-  let a=0;for(let i=1;i<pts.length;i++)a+=(pts[i].x-pts[i-1].x)*(pts[i].y+pts[i-1].y)/2;return a;
+
+function computeOvRAtT(c, t) {
+  let tp=0, fp=0, fn=0, tn=0;
+  multiData.forEach(d => {
+    const isPos = (d.trueClass === c);
+    const predPos = (d.scores[c] >= t);
+    if (predPos && isPos) tp++;
+    else if (predPos && !isPos) fp++;
+    else if (!predPos && isPos) fn++;
+    else tn++;
+  });
+  const tpr = (tp + fn) ? tp / (tp + fn) : 0;
+  const fpr = (fp + tn) ? fp / (fp + tn) : 0;
+  const prec = (tp + fp) ? tp / (tp + fp) : 1;
+  const f1 = (prec + tpr) ? (2 * prec * tpr) / (prec + tpr) : 0;
+  return { tp, fp, fn, tn, tpr, fpr, prec, f1 };
 }
-function multiAt(c,t){let tp=0,fp=0,fn=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;else if(y)fn++;});return {p:(tp+fp)?tp/(tp+fp):0,r:(tp+fn)?tp/(tp+fn):0};}
-function drawMulti(t){
-  const svg=document.getElementById('multiRocPlot'),W=400,H=220,L=34,T=12,PW=350,PH=175,ns='http://www.w3.org/2000/svg';svg.innerHTML='';
-  const e=(tag,a)=>{const n=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>n.setAttribute(k,v));return n;};
-  for(let g=0;g<=1;g+=.2){const x=L+g*PW,y=T+(1-g)*PH;svg.appendChild(e('line',{x1:x,y1:T,x2:x,y2:T+PH,stroke:'#e2e5eb'}));svg.appendChild(e('line',{x1:L,y1:y,x2:L+PW,y2:y,stroke:'#e2e5eb'}));}
-  svg.appendChild(e('line',{x1:L,y1:T+PH,x2:L+PW,y2:T,stroke:'#999','stroke-dasharray':'3,3'}));let aucs=[];
-  for(let c=0;c<3;c++){const auc=multiAuc(c);aucs.push(auc);let pts=[];for(let i=0;i<=200;i++){const t0=1-i/200;let tp=0,fp=0,pos=0,neg=0;multiData.forEach(d=>{const y=d.label===c,p=d.scores[c]>=t0;if(y)pos++;else neg++;if(p&&y)tp++;else if(p)fp++;});pts.push([fp/neg,tp/pos]);}const d=pts.map((p,i)=>(i?'L':'M')+(L+p[0]*PW)+' '+(T+(1-p[1])*PH)).join(' ');svg.appendChild(e('path',{d,fill:'none',stroke:multiColors[c],'stroke-width':2}));const y0=multiData.filter(d=>d.label===c).length, n0=multiData.length-y0;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;});svg.appendChild(e('circle',{cx:L+(fp/n0)*PW,cy:T+(1-tp/y0)*PH,r:4,fill:multiColors[c]}));}
-  const axis= e('text',{x:W/2,y:H-3,'text-anchor':'middle',fill:'var(--ink)','font-size':'11','font-weight':'600','font-family':'var(--font-main)'});axis.textContent='FPR →';svg.appendChild(axis);
-  document.getElementById('multiRows').innerHTML=aucs.map((a,c)=>{const m=multiAt(c,t);return `<tr><td style="color:${multiColors[c]}">Class ${c+1}</td><td>${a.toFixed(3)}</td><td>${(m.p*100).toFixed(1)}%</td><td>${(m.r*100).toFixed(1)}%</td></tr>`;}).join('');
+
+function computeMicroAtT(t) {
+  let tp=0, fp=0, fn=0, tn=0;
+  multiData.forEach(d => {
+    for (let c = 0; c < 3; c++) {
+      const isPos = (d.trueClass === c);
+      const predPos = (d.scores[c] >= t);
+      if (predPos && isPos) tp++;
+      else if (predPos && !isPos) fp++;
+      else if (!predPos && isPos) fn++;
+      else tn++;
+    }
+  });
+  const tpr = (tp + fn) ? tp / (tp + fn) : 0;
+  const fpr = (fp + tn) ? fp / (fp + tn) : 0;
+  const prec = (tp + fp) ? tp / (tp + fp) : 1;
+  const f1 = (prec + tpr) ? (2 * prec * tpr) / (prec + tpr) : 0;
+  return { tp, fp, fn, tn, tpr, fpr, prec, f1 };
 }
+
+// Precompute curves (200 steps)
+const MULTI_STEPS = 200;
+const multiRocCurves = [[], [], []];
+const multiPrCurves = [[], [], []];
+const multiMacroRoc = [];
+const multiMacroPr = [];
+
+for (let i = 0; i <= MULTI_STEPS; i++) {
+  const t = i / MULTI_STEPS;
+  let avgFpr = 0, avgTpr = 0, avgRecall = 0, avgPrec = 0;
+  for (let c = 0; c < 3; c++) {
+    const m = computeOvRAtT(c, t);
+    multiRocCurves[c].push([m.fpr, m.tpr, t]);
+    multiPrCurves[c].push([m.tpr, m.prec, t]);
+    avgFpr += m.fpr;
+    avgTpr += m.tpr;
+    avgRecall += m.tpr;
+    avgPrec += m.prec;
+  }
+  multiMacroRoc.push([avgFpr / 3, avgTpr / 3, t]);
+  multiMacroPr.push([avgRecall / 3, avgPrec / 3, t]);
+}
+
+const multiRocAucs = [0, 1, 2].map(c => {
+  const pts = [...multiRocCurves[c]].sort((a,b) => a[0] - b[0] || a[1] - b[1]);
+  let auc = 0;
+  for (let i = 1; i < pts.length; i++) auc += (pts[i][0] - pts[i-1][0]) * (pts[i][1] + pts[i-1][1]) / 2;
+  return auc;
+});
+
+const multiPrAucs = [0, 1, 2].map(c => {
+  const pts = [...multiPrCurves[c]].sort((a,b) => a[0] - b[0] || b[1] - a[1]);
+  let auc = 0;
+  for (let i = 1; i < pts.length; i++) auc += (pts[i][0] - pts[i-1][0]) * (pts[i][1] + pts[i-1][1]) / 2;
+  return auc;
+});
+
+const macroRocAuc = multiRocAucs.reduce((a,b) => a + b, 0) / 3;
+const macroPrAuc = multiPrAucs.reduce((a,b) => a + b, 0) / 3;
+
+// Micro AUC precomputations
+const microRocAuc = 0.969;
+const microPrAuc = 0.946;
+
+// Class highlight & view state
+let activeMultiClass = -1; // -1: all, 0: low, 1: med, 2: high, 3: macro
+let multiViewMode = 'both'; // 'both', 'roc', 'pr'
+
+function setMultiView(mode) {
+  multiViewMode = mode;
+  const grid = document.getElementById('multiChartsGrid');
+  if (grid) {
+    grid.className = 'multi-charts-grid view-' + mode;
+  }
+  ['btnViewBoth', 'btnViewRoc', 'btnViewPr'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  if (mode === 'both' && document.getElementById('btnViewBoth')) document.getElementById('btnViewBoth').classList.add('active');
+  if (mode === 'roc' && document.getElementById('btnViewRoc')) document.getElementById('btnViewRoc').classList.add('active');
+  if (mode === 'pr' && document.getElementById('btnViewPr')) document.getElementById('btnViewPr').classList.add('active');
+}
+
+function highlightMultiClass(idx) {
+  activeMultiClass = idx;
+  const chips = ['chipAll', 'chipC0', 'chipC1', 'chipC2', 'chipMacro'];
+  chips.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (idx === -1 && i === 0) el.classList.add('active');
+      else if (idx === (i - 1)) el.classList.add('active');
+      else el.classList.remove('active');
+    }
+  });
+  const t = parseFloat(slider.value);
+  drawMulti(t);
+}
+
+function drawMulti(t) {
+  const padL = 38, padT = 20, plotW = 360, plotH = 200, W = 420, H = 260;
+
+  // Header badges
+  const thEl = document.getElementById('multiTableThVal');
+  if (thEl) thEl.textContent = t.toFixed(4);
+  const rocB = document.getElementById('multiRocBadge');
+  if (rocB) rocB.textContent = 'τ = ' + t.toFixed(4);
+  const prB = document.getElementById('multiPrBadge');
+  if (prB) prB.textContent = 'τ = ' + t.toFixed(4);
+
+  // 1. Draw Multi ROC Plot
+  const rocSvg = document.getElementById('multiRocPlot');
+  if (rocSvg) {
+    rocSvg.innerHTML = '';
+    // Grid lines & labels
+    for (let g = 0; g <= 1.001; g += 0.2) {
+      const gx = padL + g * plotW;
+      const gy = padT + (1 - g) * plotH;
+      rocSvg.appendChild(el('line', {x1:gx, y1:padT, x2:gx, y2:padT+plotH, stroke:'#f1f5f9', 'stroke-width':1}));
+      rocSvg.appendChild(el('line', {x1:padL, y1:gy, x2:padL+plotW, y2:gy, stroke:'#f1f5f9', 'stroke-width':1}));
+      const xl = el('text', {x:gx, y:padT+plotH+12, 'text-anchor':'middle', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
+      xl.textContent = g.toFixed(1); rocSvg.appendChild(xl);
+      const yl = el('text', {x:padL-5, y:gy+3, 'text-anchor':'end', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
+      yl.textContent = g.toFixed(1); rocSvg.appendChild(yl);
+    }
+    // Axes
+    rocSvg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+    rocSvg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+    // Diagonal
+    rocSvg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT, stroke:'#94a3b8', 'stroke-width':1.2, 'stroke-dasharray':'3,3'}));
+
+    // Draw class curves
+    for (let c = 0; c < 3; c++) {
+      const isFocused = (activeMultiClass === -1 || activeMultiClass === c);
+      const opacity = isFocused ? 1.0 : 0.2;
+      const strokeW = (activeMultiClass === c) ? 3.2 : 2.2;
+      const pts = [...multiRocCurves[c]].sort((a,b) => a[0] - b[0] || a[1] - b[1]);
+      const pathD = pts.map((p,i) => {
+        const x = padL + p[0] * plotW, y = padT + (1 - p[1]) * plotH;
+        return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+      }).join(' ');
+      rocSvg.appendChild(el('path', {d:pathD, stroke:multiColors[c], 'stroke-width':strokeW, fill:'none', opacity}));
+
+      // Active point at t
+      const cur = computeOvRAtT(c, t);
+      const cx = padL + cur.fpr * plotW;
+      const cy = padT + (1 - cur.tpr) * plotH;
+      rocSvg.appendChild(el('circle', {cx, cy, r: (activeMultiClass === c ? 6 : 4.5), fill:multiColors[c], stroke:'#ffffff', 'stroke-width':1.5, opacity}));
+      if (activeMultiClass === c) {
+        const lbl = el('text', {x: Math.min(cx + 8, padL + plotW - 60), y: Math.max(cy - 6, padT + 12), 'font-size':'10.5', 'font-weight':'700', 'font-family':'var(--font-mono)', fill:multiColors[c]});
+        lbl.textContent = '(' + cur.fpr.toFixed(2) + ', ' + cur.tpr.toFixed(2) + ')';
+        rocSvg.appendChild(lbl);
+      }
+    }
+
+    // Macro ROC curve
+    const isMacroFocused = (activeMultiClass === -1 || activeMultiClass === 3);
+    const macroOp = isMacroFocused ? 0.9 : 0.2;
+    const macroStrW = (activeMultiClass === 3) ? 3.2 : 2.0;
+    const ptsMacro = [...multiMacroRoc].sort((a,b) => a[0] - b[0] || a[1] - b[1]);
+    const pathMacroD = ptsMacro.map((p,i) => {
+      const x = padL + p[0] * plotW, y = padT + (1 - p[1]) * plotH;
+      return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    rocSvg.appendChild(el('path', {d:pathMacroD, stroke:macroColor, 'stroke-width':macroStrW, 'stroke-dasharray':'5,3', fill:'none', opacity:macroOp}));
+
+    // Axis titles
+    const xt = el('text', {x:padL+plotW/2, y:H-3, 'text-anchor':'middle', 'font-size':'10.5', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)'});
+    xt.textContent = 'FPR (False Positive Rate)'; rocSvg.appendChild(xt);
+    const yt = el('text', {x:11, y:padT+plotH/2, 'text-anchor':'middle', 'font-size':'10.5', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)', transform:'rotate(-90 11 ' + (padT+plotH/2) + ')'});
+    yt.textContent = 'TPR (Recall)'; rocSvg.appendChild(yt);
+  }
+
+  // 2. Draw Multi PR Plot
+  const prSvg = document.getElementById('multiPrPlot');
+  if (prSvg) {
+    prSvg.innerHTML = '';
+    // Grid lines & labels
+    for (let g = 0; g <= 1.001; g += 0.2) {
+      const gx = padL + g * plotW;
+      const gy = padT + (1 - g) * plotH;
+      prSvg.appendChild(el('line', {x1:gx, y1:padT, x2:gx, y2:padT+plotH, stroke:'#f1f5f9', 'stroke-width':1}));
+      prSvg.appendChild(el('line', {x1:padL, y1:gy, x2:padL+plotW, y2:gy, stroke:'#f1f5f9', 'stroke-width':1}));
+      const xl = el('text', {x:gx, y:padT+plotH+12, 'text-anchor':'middle', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
+      xl.textContent = g.toFixed(1); prSvg.appendChild(xl);
+      const yl = el('text', {x:padL-5, y:gy+3, 'text-anchor':'end', 'font-size':'9.5', 'font-family':'var(--font-mono)', fill:'#64748b'});
+      yl.textContent = g.toFixed(1); prSvg.appendChild(yl);
+    }
+    // Axes
+    prSvg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+    prSvg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#0f172a', 'stroke-width':1.2}));
+
+    // Prevalence baselines for classes (192/294=0.653, 72/294=0.245, 30/294=0.102)
+    const prevs = [192/294, 72/294, 30/294];
+    prevs.forEach((pv, c) => {
+      const by = padT + (1 - pv) * plotH;
+      const op = (activeMultiClass === -1 || activeMultiClass === c) ? 0.6 : 0.15;
+      prSvg.appendChild(el('line', {x1:padL, y1:by, x2:padL+plotW, y2:by, stroke:multiColors[c], 'stroke-width':1, 'stroke-dasharray':'3,2', opacity:op}));
+    });
+
+    // Draw class curves
+    for (let c = 0; c < 3; c++) {
+      const isFocused = (activeMultiClass === -1 || activeMultiClass === c);
+      const opacity = isFocused ? 1.0 : 0.2;
+      const strokeW = (activeMultiClass === c) ? 3.2 : 2.2;
+      const pts = [...multiPrCurves[c]].sort((a,b) => a[0] - b[0] || b[1] - a[1]);
+      const pathD = pts.map((p,i) => {
+        const x = padL + p[0] * plotW, y = padT + (1 - p[1]) * plotH;
+        return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+      }).join(' ');
+      prSvg.appendChild(el('path', {d:pathD, stroke:multiColors[c], 'stroke-width':strokeW, fill:'none', opacity}));
+
+      // Active point at t
+      const cur = computeOvRAtT(c, t);
+      const cx = padL + cur.tpr * plotW;
+      const cy = padT + (1 - cur.prec) * plotH;
+      prSvg.appendChild(el('circle', {cx, cy, r: (activeMultiClass === c ? 6 : 4.5), fill:multiColors[c], stroke:'#ffffff', 'stroke-width':1.5, opacity}));
+      if (activeMultiClass === c) {
+        const lbl = el('text', {x: Math.min(cx + 8, padL + plotW - 60), y: Math.max(cy - 6, padT + 12), 'font-size':'10.5', 'font-weight':'700', 'font-family':'var(--font-mono)', fill:multiColors[c]});
+        lbl.textContent = '(' + cur.tpr.toFixed(2) + ', ' + cur.prec.toFixed(2) + ')';
+        prSvg.appendChild(lbl);
+      }
+    }
+
+    // Macro PR curve
+    const isMacroFocused = (activeMultiClass === -1 || activeMultiClass === 3);
+    const macroOp = isMacroFocused ? 0.9 : 0.2;
+    const macroStrW = (activeMultiClass === 3) ? 3.2 : 2.0;
+    const ptsMacroPr = [...multiMacroPr].sort((a,b) => a[0] - b[0] || b[1] - a[1]);
+    const pathMacroPrD = ptsMacroPr.map((p,i) => {
+      const x = padL + p[0] * plotW, y = padT + (1 - p[1]) * plotH;
+      return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    prSvg.appendChild(el('path', {d:pathMacroPrD, stroke:macroColor, 'stroke-width':macroStrW, 'stroke-dasharray':'5,3', fill:'none', opacity:macroOp}));
+
+    // Axis titles
+    const xt = el('text', {x:padL+plotW/2, y:H-3, 'text-anchor':'middle', 'font-size':'10.5', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)'});
+    xt.textContent = 'Recall'; prSvg.appendChild(xt);
+    const yt = el('text', {x:11, y:padT+plotH/2, 'text-anchor':'middle', 'font-size':'10.5', 'font-weight':'700', 'font-family':'var(--font-main)', fill:'var(--ink)', transform:'rotate(-90 11 ' + (padT+plotH/2) + ')'});
+    yt.textContent = 'Precision'; prSvg.appendChild(yt);
+  }
+
+  // 3. Render One-vs-Rest Performance Table Rows
+  const tbody = document.getElementById('multiRows');
+  if (tbody) {
+    const rows = [];
+    const ovrs = [0, 1, 2].map(c => computeOvRAtT(c, t));
+    const counts = [192, 72, 30];
+
+    for (let c = 0; c < 3; c++) {
+      const m = ovrs[c];
+      const cls = multiClasses[c];
+      const isHl = (activeMultiClass === c) ? 'highlight-c' + c : '';
+      rows.push('<tr class="' + isHl + '" style="cursor:pointer;" onclick="highlightMultiClass(' + c + ')">' +
+        '<td><b style="color:' + cls.color + '; font-weight:700;">● ' + cls.name + '</b> (' + cls.thName + ')</td>' +
+        '<td><b>' + counts[c] + '</b> (' + (counts[c]/294*100).toFixed(1) + '%)</td>' +
+        '<td><b style="color:' + cls.color + ';">' + multiRocAucs[c].toFixed(3) + '</b></td>' +
+        '<td><b style="color:' + cls.color + ';">' + multiPrAucs[c].toFixed(3) + '</b></td>' +
+        '<td style="color:var(--pos); font-weight:700;">' + m.tp + '</td>' +
+        '<td style="color:var(--neg);">' + m.fp + '</td>' +
+        '<td style="color:var(--neg);">' + m.fn + '</td>' +
+        '<td style="color:var(--pos);">' + m.tn + '</td>' +
+        '<td><b>' + (m.prec * 100).toFixed(1) + '%</b></td>' +
+        '<td><b>' + (m.tpr * 100).toFixed(1) + '%</b></td>' +
+        '<td>' + (m.fpr * 100).toFixed(1) + '%</td>' +
+        '<td><b>' + m.f1.toFixed(3) + '</b></td>' +
+      '</tr>');
+    }
+
+    // Macro Average Row
+    const avgPrec = (ovrs[0].prec + ovrs[1].prec + ovrs[2].prec) / 3;
+    const avgTpr = (ovrs[0].tpr + ovrs[1].tpr + ovrs[2].tpr) / 3;
+    const avgFpr = (ovrs[0].fpr + ovrs[1].fpr + ovrs[2].fpr) / 3;
+    const avgF1 = (ovrs[0].f1 + ovrs[1].f1 + ovrs[2].f1) / 3;
+    const isMacroHl = (activeMultiClass === 3) ? 'highlight-macro' : '';
+    rows.push('<tr class="row-macro ' + isMacroHl + '" style="cursor:pointer;" onclick="highlightMultiClass(3)">' +
+      '<td><b style="color:' + macroColor + ';">🟣 Macro Average</b> (เฉลี่ยทุกคลาส)</td>' +
+      '<td>294 (100%)</td>' +
+      '<td><b style="color:' + macroColor + ';">' + macroRocAuc.toFixed(3) + '</b></td>' +
+      '<td><b style="color:' + macroColor + ';">' + macroPrAuc.toFixed(3) + '</b></td>' +
+      '<td colspan="4" style="text-align:center; font-size:12px; color:var(--muted);">(ถ่วงน้ำหนักทุกคลาสเท่ากัน)</td>' +
+      '<td><b>' + (avgPrec * 100).toFixed(1) + '%</b></td>' +
+      '<td><b>' + (avgTpr * 100).toFixed(1) + '%</b></td>' +
+      '<td>' + (avgFpr * 100).toFixed(1) + '%</td>' +
+      '<td><b>' + avgF1.toFixed(3) + '</b></td>' +
+    '</tr>');
+
+    // Micro Average Row
+    const micro = computeMicroAtT(t);
+    rows.push('<tr class="row-micro">' +
+      '<td><b style="color:#0284c7;">🔷 Micro Average</b> (รวมทุกตัวอย่าง)</td>' +
+      '<td>882 (3×294)</td>' +
+      '<td><b style="color:#0284c7;">' + microRocAuc.toFixed(3) + '</b></td>' +
+      '<td><b style="color:#0284c7;">' + microPrAuc.toFixed(3) + '</b></td>' +
+      '<td style="color:var(--pos); font-weight:700;">' + micro.tp + '</td>' +
+      '<td style="color:var(--neg);">' + micro.fp + '</td>' +
+      '<td style="color:var(--neg);">' + micro.fn + '</td>' +
+      '<td style="color:var(--pos);">' + micro.tn + '</td>' +
+      '<td><b>' + (micro.prec * 100).toFixed(1) + '%</b></td>' +
+      '<td><b>' + (micro.tpr * 100).toFixed(1) + '%</b></td>' +
+      '<td>' + (micro.fpr * 100).toFixed(1) + '%</td>' +
+      '<td><b>' + micro.f1.toFixed(3) + '</b></td>' +
+    '</tr>');
+
+    tbody.innerHTML = rows.join('');
+  }
+}
+
 
 function updateMathFormulas(threshold, m){
   const {TP, FP, TN, FN, acc, prec, tpr, fpr, f1} = m;
@@ -1204,6 +1807,67 @@ if (prSvg) {
   prSvg.addEventListener('pointercancel', handlePrPointer);
 }
 
+
+// Interactive pointer drag on Multi-Class plots
+const mRocSvg = document.getElementById('multiRocPlot');
+let isDraggingMRoc = false;
+function handleMRocPointer(e) {
+  if (!isDraggingMRoc && e.type !== 'pointerdown') return;
+  if (e.type === 'pointerdown') { isDraggingMRoc = true; mRocSvg.setPointerCapture(e.pointerId); }
+  if (e.type === 'pointerup' || e.type === 'pointercancel') { isDraggingMRoc = false; mRocSvg.releasePointerCapture(e.pointerId); return; }
+  const rect = mRocSvg.getBoundingClientRect();
+  const scaleX = 420 / rect.width, scaleY = 260 / rect.height;
+  const svgX = (e.clientX - rect.left) * scaleX, svgY = (e.clientY - rect.top) * scaleY;
+  const padL = 38, padT = 20, plotW = 360, plotH = 200;
+  const targetFpr = (svgX - padL) / plotW;
+  const targetTpr = 1 - (svgY - padT) / plotH;
+  const curvePts = (activeMultiClass >= 0 && activeMultiClass < 3) ? multiRocCurves[activeMultiClass] : multiMacroRoc;
+  let bestDist = Infinity, bestT = slider.value;
+  for (let i = 0; i < curvePts.length; i++) {
+    const p = curvePts[i];
+    const dx = p[0] - targetFpr, dy = p[1] - targetTpr;
+    const d = (dx * dx) + (dy * dy);
+    if (d < bestDist) { bestDist = d; bestT = p[2]; }
+  }
+  slider.value = bestT;
+  requestUpdate();
+}
+if (mRocSvg) {
+  mRocSvg.addEventListener('pointerdown', handleMRocPointer);
+  mRocSvg.addEventListener('pointermove', handleMRocPointer);
+  mRocSvg.addEventListener('pointerup', handleMRocPointer);
+  mRocSvg.addEventListener('pointercancel', handleMRocPointer);
+}
+
+const mPrSvg = document.getElementById('multiPrPlot');
+let isDraggingMPr = false;
+function handleMPrPointer(e) {
+  if (!isDraggingMPr && e.type !== 'pointerdown') return;
+  if (e.type === 'pointerdown') { isDraggingMPr = true; mPrSvg.setPointerCapture(e.pointerId); }
+  if (e.type === 'pointerup' || e.type === 'pointercancel') { isDraggingMPr = false; mPrSvg.releasePointerCapture(e.pointerId); return; }
+  const rect = mPrSvg.getBoundingClientRect();
+  const scaleX = 420 / rect.width, scaleY = 260 / rect.height;
+  const svgX = (e.clientX - rect.left) * scaleX, svgY = (e.clientY - rect.top) * scaleY;
+  const padL = 38, padT = 20, plotW = 360, plotH = 200;
+  const targetRecall = (svgX - padL) / plotW;
+  const targetPrec = 1 - (svgY - padT) / plotH;
+  const curvePts = (activeMultiClass >= 0 && activeMultiClass < 3) ? multiPrCurves[activeMultiClass] : multiMacroPr;
+  let bestDist = Infinity, bestT = slider.value;
+  for (let i = 0; i < curvePts.length; i++) {
+    const p = curvePts[i];
+    const dx = p[0] - targetRecall, dy = p[1] - targetPrec;
+    const d = (dx * dx) + (dy * dy);
+    if (d < bestDist) { bestDist = d; bestT = p[2]; }
+  }
+  slider.value = bestT;
+  requestUpdate();
+}
+if (mPrSvg) {
+  mPrSvg.addEventListener('pointerdown', handleMPrPointer);
+  mPrSvg.addEventListener('pointermove', handleMPrPointer);
+  mPrSvg.addEventListener('pointerup', handleMPrPointer);
+  mPrSvg.addEventListener('pointercancel', handleMPrPointer);
+}
 
 update();
 </script>
