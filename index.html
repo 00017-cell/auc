@@ -2,1035 +2,1049 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>จุดตัดสัญญาณ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Threshold Explorer — HR Attrition</title>
 <style>
   :root{
-    --bg:#0A0F1A;
-    --panel:#0F1830;
-    --panel-2:#0C1426;
-    --border:#1E2B47;
-    --grid:#152036;
-    --text:#E7ECF5;
-    --muted:#7C8AA5;
-    --signal:#34D399;
-    --signal-dim:#1F5240;
-    --sweep:#FBBF24;
-    --danger:#F87171;
-    --danger-dim:#5A2E31;
-    --neg:#5B6B8C;
-    --pr:#60A5FA;
-    --pr-dim:#1E3A5F;
-    --truth-neg:#FB923C;
-    --truth-pos:#C084FC;
+    --bg:#ffffff; --panel:#f6f7f9; --panel2:#eef0f4; 
+    --ink:#000000; --muted:#000000;
+    --neg:#e60000; /* แดงสดเข้ม */
+    --pos:#00b300; /* เขียวสดเข้ม */
+    --line:#000000; --border:#e2e5eb;
+    --tp:var(--pos); --tn:var(--pos); --fp:var(--neg); --fn:var(--neg);
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:auto;min-height:100%;}
   body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:"IBM Plex Sans Thai","IBM Plex Sans",sans-serif;
-    padding:28px 16px 40px;
-    min-height:100vh;
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    display:flex; flex-direction:column;
+    height:auto; min-height:100dvh; overflow-y:auto; overflow-x:hidden; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
   }
-  .wrap{max-width:920px;margin:0 auto;}
-  .mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;}
+  .head{flex:0 0 auto; margin-bottom:8px;}
+  .head h1{font-size:15px; font-weight:700; margin:0 0 2px; letter-spacing:.2px;}
+  .head p{font-size:11px; color:var(--muted); margin:0; line-height:1.35;}
 
-  header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:16px;
-    flex-wrap:wrap;
-    border-bottom:1px solid var(--border);
-    padding-bottom:16px;
-    margin-bottom:20px;
+  .thresh-bar{
+    flex:0 0 auto; background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:10px 14px 12px; margin-bottom:8px; overflow:visible;
   }
-  h1{
-    font-size:23px;
-    font-weight:600;
-    margin:0 0 6px;
-    letter-spacing:0.2px;
-  }
-  header p{
-    margin:0;
-    color:var(--muted);
-    font-size:14px;
-    max-width:56ch;
-    line-height:1.55;
-  }
-  .tau-readout{
-    text-align:right;
-    flex-shrink:0;
-  }
-  .tau-readout .val{
-    font-size:34px;
-    color:var(--sweep);
-    line-height:1;
-  }
-  .tau-readout .lbl{
-    font-size:12px;
-    color:var(--muted);
-    margin-top:4px;
-  }
-
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:6px;
-    padding:20px;
-    margin-bottom:16px;
-    position:relative;
-  }
-  .panel::before, .panel::after{
-    content:"";
-    position:absolute;
-    width:6px;height:6px;
-    border:1px solid var(--border);
-    top:-1px;
-  }
-  .panel::before{left:-1px;border-right:none;border-bottom:none;}
-  .panel::after{right:-1px;border-left:none;border-bottom:none;}
-
-  .strip-head{
-    display:flex;justify-content:space-between;align-items:baseline;
-    margin-bottom:14px;
-  }
-  .strip-head h2{font-size:13px;font-weight:500;margin:0;color:var(--muted);}
-  .sync{font-size:12px;color:var(--muted);}
-  .sync .dot{
-    display:inline-block;width:6px;height:6px;border-radius:50%;
-    background:var(--signal);margin-right:6px;position:relative;top:-1px;
-    transition:background .3s;
-  }
-  .sync.stale .dot{background:var(--muted);}
-
-  .strip{
-    position:relative;
-    height:176px;
-    border-bottom:1px solid var(--grid);
-    margin-bottom:8px;
-  }
-  .blip-layer{
-    position:absolute;inset:0;
-    display:flex;align-items:flex-end;gap:1px;
-  }
-  .blip-col{
-    flex:1 1 0;min-width:0;
-    display:flex;flex-direction:column-reverse;align-items:center;gap:1px;
-  }
-  .strip .axis-tick{
-    position:absolute;bottom:-18px;font-size:11px;color:var(--muted);
-    transform:translateX(-50%);
-  }
-  .blip{
-    flex:0 0 auto;
-    width:10px;height:10px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:9px;font-weight:700;line-height:1;
-    transition:background-color .18s ease, color .18s ease, opacity .18s ease;
-  }
-  .blip.blip-hidden{display:none;}
-  /* shape = ความจริง: จุดกลม = ไม่ใช่เป้าหมาย, กากบาท = ใช่เป้าหมายจริง */
-  .blip.dot{border-radius:50%;}
-  .blip.cross{background:transparent;}
-  /* color = คำทำนายของโมเดล ณ เกณฑ์ปัจจุบัน: ฟ้า = ทำนาย "ใช่", เทา = ทำนาย "ไม่ใช่" */
-  .blip.dot.pred-pos{background:var(--pr);box-shadow:0 0 7px 0 rgba(96,165,250,.55);}
-  .blip.dot.pred-neg{background:var(--neg);opacity:.5;}
-  .blip.cross.pred-pos{color:var(--pr);text-shadow:0 0 7px rgba(96,165,250,.65);}
-  .blip.cross.pred-neg{color:var(--neg);opacity:.85;}
-  .overflow-label{font-size:9px;color:var(--muted);margin-bottom:1px;}
-
-  .threshold-line{
-    position:absolute;
-    top:-6px;bottom:-6px;
-    width:2px;
-    background:var(--sweep);
-    box-shadow:0 0 6px 1px rgba(251,191,36,.6);
-    transform:translateX(-1px);
-    transition:left .12s linear;
-    z-index:2;
-  }
-
+  .thresh-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;}
+  .thresh-top label{font-size:11px; color:var(--muted); letter-spacing:.2px;}
   input[type=range]{
-    -webkit-appearance:none;
-    width:100%;
-    height:14px;
-    background:var(--border);
-    margin:22px 0 8px;
-    border-radius:7px;
-    cursor:pointer;
+    display:block; width:100%; min-width:0; flex:none; margin:0; padding:0; -webkit-appearance:none; appearance:none; height:32px; border-radius:999px;
+    background:linear-gradient(to right, var(--neg) 0%, var(--neg) var(--pct,50%), var(--pos) var(--pct,50%), var(--pos) 100%) center/100% 8px no-repeat;
   }
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;
-    width:26px;height:26px;
-    margin-top:-6px;
-    border-radius:50%;
-    background:#FFFFFF;
-    border:none;
-    cursor:grab;
-    box-shadow:0 2px 6px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.12);
-  }
-  input[type=range]::-moz-range-track{
-    height:14px;border-radius:7px;background:transparent;border:none;
+    -webkit-appearance:none; width:24px; height:24px; border-radius:50%; margin-top:-8px;
+    background:#fff; border:3px solid var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.4);
   }
   input[type=range]::-moz-range-thumb{
-    width:26px;height:26px;border-radius:50%;
-    background:#FFFFFF;border:none;cursor:grab;
-    box-shadow:0 2px 6px rgba(0,0,0,.45);
+    width:24px; height:24px; border-radius:50%; background:#fff; border:3px solid var(--ink);
   }
-  .legend{
-    display:flex;gap:16px;flex-wrap:wrap;align-items:center;
-    margin-top:22px;font-size:12px;color:var(--muted);
-  }
-  .legend span{display:inline-flex;align-items:center;gap:6px;}
-  .legend .swatch{width:9px;height:9px;border-radius:50%;display:inline-block;}
-  .legend .swatch.pred-pos{background:var(--pr);}
-  .legend .swatch.pred-neg{background:var(--neg);opacity:.7;}
-  .legend .shape-dot{width:9px;height:9px;border-radius:50%;background:var(--muted);display:inline-block;}
-  .legend .shape-cross{font-size:12px;font-weight:700;color:var(--muted);}
-  .legend-note{
-    font-size:11.5px;color:var(--muted);line-height:1.7;
-    margin:10px 0 0;
-  }
-  .legend-note b{color:var(--text);font-weight:500;}
+  input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:999px;}
+  input[type=range]::-moz-range-track{height:8px; border-radius:999px;}
+  .thresh-val{font-variant-numeric:tabular-nums; font-weight:800; font-size:15px;}
 
-  /* ---- data-mode toggle ---- */
-  .mode-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
-  .mode-btn{
-    flex:1 1 220px;
-    text-align:left;
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    border-radius:6px;
-    color:var(--muted);
-    padding:10px 14px;
-    cursor:pointer;
-    font-family:inherit;
-    font-size:13px;
-    transition:border-color .2s ease, background .2s ease, color .2s ease;
+  .dotplot-wrap{
+    flex:1 1 auto; min-height:0; background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; padding:8px 10px 2px; margin-bottom:8px; display:flex; flex-direction:column;
   }
-  .mode-btn:hover{border-color:var(--neg);}
-  .mode-btn .mode-sub{
-    display:block;margin-top:4px;font-size:11px;
-    font-family:"IBM Plex Mono",monospace;color:var(--muted);
+  .dotplot-wrap svg{flex:1 1 auto;min-height:0;width:100%;max-height:220px;display:block;}
+  .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:10px; color:var(--muted); padding:4px 2px 2px;}
+  .legend span{display:inline-flex; align-items:center; gap:4px;}
+
+  .row{flex:0 0 auto!important;display:flex;gap:8px;margin-bottom:8px;min-height:220px;align-items:stretch}
+
+  .cm-card{
+    flex:1.15 1 0;min-width:0;height:220px;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:8px;display:flex;flex-direction:column;overflow:hidden;
   }
-  .mode-btn.active{
-    border-color:var(--sweep);
-    color:var(--text);
-    background:rgba(251,191,36,.08);
-  }
-  .mode-btn.active .mode-sub{color:var(--sweep);}
-  .mode-desc{font-size:12px;color:var(--muted);margin:0;line-height:1.6;}
-  .mode-desc b{color:var(--text);font-weight:500;}
-
-  .grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;}
-  @media (max-width:680px){.grid2{grid-template-columns:1fr;}}
-
-  .roc-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:8px;}
-  .roc-title h2{font-size:13px;font-weight:500;margin:0;color:var(--muted);}
-  .roc-title .auc{font-size:13px;color:var(--text);white-space:nowrap;}
-  .roc-title .auc b{color:var(--signal);font-weight:600;}
-  .roc-title .auc.pr b{color:var(--pr);}
-
-  .coord{
-    text-align:center;font-size:12px;color:var(--sweep);
-    margin:-2px 0 6px;
-  }
-
-  svg.roc{width:100%;height:auto;display:block;}
-  .roc-axis-label{font-size:9px;fill:var(--muted);font-family:"IBM Plex Mono",monospace;}
-
-  .curve-note{
-    font-size:12px;color:var(--muted);line-height:1.65;
-    margin:12px 0 0;padding-top:10px;border-top:1px solid var(--border);
-  }
-  .curve-note b{color:var(--text);font-weight:500;}
-
-  .cm-title{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 14px;}
+  .cm-title{font-size:11px; font-weight:700; margin-bottom:2px;}
+  .cm-sub{font-size:7.5px; color:var(--muted); margin-bottom:6px; line-height:1.25;}
   .cm-grid{
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;
+    flex:1; display:grid; grid-template-columns:26px 1fr 1fr; grid-template-rows:auto 1fr 1fr;
+    gap:3px;
   }
-  .cell{
-    border:1px solid var(--border);
-    border-radius:4px;
-    padding:10px 12px;
-    background:var(--panel-2);
+  .cm-corner{}
+  .cm-colhead{font-size:7.5px; color:var(--muted); text-align:center; line-height:1.15; align-self:end; padding-bottom:1px;}
+  .cm-rowhead{font-size:7.5px; color:var(--muted); display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.15;}
+  .quad{
+    border-radius:9px; padding:4px 2px; text-align:center; position:relative;
+    border:1px solid rgba(0,0,0,.06); display:flex; flex-direction:column; justify-content:center; align-items:center;
   }
-  .cell .n{font-size:24px;line-height:1;}
-  .cell .cap{font-size:11px;color:var(--muted);margin-top:6px;}
-  .cell.tp .n{color:var(--signal);}
-  .cell.fp .n, .cell.fn .n{color:var(--danger);}
-  .cell.tn .n{color:var(--neg);}
+  .quad .code{font-size:8px; font-weight:700; letter-spacing:.3px; opacity:.85;}
+  .quad .n{font-size:15px; font-weight:800; line-height:1.1;}
+  .quad .l{font-size:7px; color:#000000; margin-top:1px; line-height:1.15;}
+  .quad.tp{background:rgba(0,179,0,.15);} 
+  .quad.fp{background:rgba(230,0,0,.15);} 
+  .quad.fn{background:rgba(230,0,0,.15);} 
+  .quad.tn{background:rgba(0,179,0,.15);} 
 
-  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;}
-  .metric{border-top:1px solid var(--border);padding-top:8px;}
-  .metric .num{font-size:20px;}
-  .metric .name{font-size:11px;color:var(--muted);margin-top:2px;}
-  .metric .sub{font-size:10.5px;color:var(--muted);opacity:.75;margin-top:3px;line-height:1.45;}
-  .metric.primary .num{font-size:26px;color:var(--sweep);}
+  .roc-card{
+    flex:1 1 0;min-width:0;height:220px;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .roc-card svg{width:100%; height:100%; touch-action:none; cursor:grab;}
+  .roc-card svg:active{cursor:grabbing;}
 
-  /* ---- static "sorted by truth" illustration for the AUC explainer ---- */
-  .truth-strip{
-    display:flex;align-items:flex-end;gap:1px;
-    height:128px;
-    border-bottom:1px solid var(--grid);
+  .metrics{
+    flex:0 0 auto; display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:12px;
   }
-  .truth-col{
-    flex:1 1 0;min-width:0;
-    display:flex;flex-direction:column-reverse;align-items:center;gap:1px;
+  .metric{
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:6px 2px; text-align:center;
   }
-  .truth-blip{flex:0 0 auto;width:7px;height:7px;}
-  .truth-blip.neg{border-radius:50%;background:var(--truth-neg);}
-  .truth-blip.pos{
-    border-radius:2px;background:var(--truth-pos);
-    display:flex;align-items:center;justify-content:center;
-    font-size:5px;font-weight:800;color:#2B1140;
-  }
-  .truth-axis{
-    display:flex;justify-content:space-between;
-    font-size:11px;color:var(--muted);margin-top:6px;
-  }
+  .metric .lbl{font-size:8.5px; color:var(--muted); font-weight:700;}
+  .metric .def{font-size:6.3px; color:var(--muted); line-height:1.2; margin-top:1px; min-height:15px;}
+  .metric .val{font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px;}
+  .metric .unit{font-size:7px; color:var(--muted); margin-top:1px;}
+  .metrics-title{font-size:11px; font-weight:700; margin:0 0 4px;}
 
-  /* ---- insight callout ---- */
-  .insight-panel{border-left:3px solid var(--sweep);}
-  .insight-panel h2{font-size:13px;font-weight:500;margin:0 0 10px;color:var(--text);}
-  .insight-panel p{font-size:13px;color:var(--muted);line-height:1.75;margin:0;}
-  .insight-panel b{color:var(--text);font-weight:500;}
+  .table-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+  .table-card h2{font-size:16px;margin:0;font-weight:700;}
+  .table-card p{font-size:12px;margin:4px 0 10px;color:var(--muted);line-height:1.45;}
+  .formula-box{display:flex;flex-wrap:wrap;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:11.5px;}
+  .formula-item{flex:1 1 200px;}
+  .formula-item code{font-family:monospace;background:#fff;padding:1px 5px;border-radius:4px;border:1px solid var(--border);font-size:11px;}
+  .current-pair-badge{display:inline-flex;align-items:center;gap:6px;background:#faf5ff;color:#6b21a8;border:1px solid #d8b4fe;padding:4px 12px;border-radius:999px;font-weight:700;font-size:12px;}
+  .table-controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .tab-btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .tab-btn{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11.5px;cursor:pointer;font-weight:600;transition:all .15s;font-family:inherit;}
+  .tab-btn:hover{border-color:#a200ff;color:#a200ff;}
+  .tab-btn.active{background:#a200ff;color:#ffffff;border-color:#a200ff;}
+  .table-scroll{max-height:350px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--bg);}
+  .roc-table{width:100%;border-collapse:collapse;font-size:12px;text-align:right;}
+  .roc-table th{position:sticky;top:0;background:var(--panel2);z-index:2;padding:8px 6px;border-bottom:2px solid var(--border);font-size:11px;font-weight:700;color:var(--ink);}
+  .roc-table td{padding:6px;border-bottom:1px solid var(--border);vertical-align:middle;font-variant-numeric:tabular-nums;}
+  .roc-table th:first-child,.roc-table td:first-child{text-align:center;}
+  .roc-table tr{cursor:pointer;transition:background .15s;}
+  .roc-table tbody tr:hover{background:rgba(162,0,255,.07);}
+  .roc-table tr.active-row{background:rgba(162,0,255,.14) !important;font-weight:700;}
+  .pair-badge{display:inline-block;font-family:monospace;font-weight:700;font-size:11.5px;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;border:1px solid #bae6fd;}
+  .active-row .pair-badge{background:#a200ff;color:#fff;border-color:#a200ff;}
+  .select-btn{background:transparent;border:1px solid #a200ff;color:#a200ff;padding:2px 8px;border-radius:4px;font-size:10.5px;cursor:pointer;font-weight:600;font-family:inherit;}
+  .select-btn:hover{background:#a200ff;color:#fff;}
+  .active-row .select-btn{background:#a200ff;color:#fff;}
 
-  /* ---- multiclass / OvO section ---- */
-  .multiclass-panel h2{font-size:14px;font-weight:600;margin:0 0 8px;color:var(--text);}
-  .multiclass-panel > p.intro{font-size:13px;color:var(--muted);line-height:1.75;margin:0 0 18px;max-width:74ch;}
-  .multi-table-wrap{overflow-x:auto;margin-top:12px}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.multi-table th{color:var(--muted);font-weight:500}.multi-table td{font-family:"IBM Plex Mono",monospace}
-  .ovr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
-  @media (max-width:680px){.ovr-grid{grid-template-columns:1fr;}}
-  .ovr-card{
-    border:1px solid var(--border);border-radius:6px;
-    padding:16px 14px;background:var(--panel-2);text-align:center;
-  }
-  .ovr-round{font-size:11px;color:var(--muted);margin-bottom:10px;font-family:"IBM Plex Mono",monospace;}
-  .ovr-classes{display:flex;justify-content:center;gap:8px;margin-bottom:12px;}
-  .ovr-dot{
-    width:32px;height:32px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:15px;
-    border:1.5px solid var(--border);
-    background:var(--panel);
-    opacity:.5;
-    transition:all .2s ease;
-  }
-  .ovr-dot.active{
-    background:var(--signal-dim);
-    border-color:var(--signal);
-    opacity:1;
-    box-shadow:0 0 10px rgba(52,211,153,.35);
-  }
-  .ovr-dot.excluded{opacity:.22;filter:grayscale(1);}
-  .ovr-eq{font-size:12.5px;color:var(--text);line-height:1.6;margin-bottom:10px;}
-  .ovr-eq .vs{color:var(--muted);margin:0 2px;}
-  .ovr-mini{display:block;margin:0 auto;}
-  .ovr-mini-cap{font-size:10px;color:var(--muted);margin-top:4px;}
-  .ovr-note{
-    font-size:12px;color:var(--muted);line-height:1.75;margin:0;
-    padding-top:14px;border-top:1px solid var(--border);max-width:74ch;
-  }
+  .math-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+  .math-card h2{font-size:16px;margin:0;font-weight:700;}
+  .math-card p{font-size:12px;margin:4px 0 12px;color:var(--muted);line-height:1.45;}
+  .math-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media (max-width:768px){.math-grid{grid-template-columns:1fr;}}
+  .math-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;}
+  .math-box.highlight{background:#faf5ff;border-color:#d8b4fe;}
+  .math-box-title{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+  .math-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-family:'IBM Plex Mono','Cascadia Code',Consolas,monospace;font-size:13px;font-variant-numeric:tabular-nums;margin:6px 0;}
+  .math-sym{font-weight:700;}
+  .math-op{color:var(--muted);font-size:13px;padding:0 1px;}
+  .math-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 2px;}
+  .math-frac .num{border-bottom:1.5px solid var(--ink);padding:0 4px 1px;text-align:center;width:100%;}
+  .math-frac .denom{padding:1px 4px 0;text-align:center;width:100%;}
+  .math-result{font-weight:800;font-size:14px;color:var(--ink);}
+  .math-pct{font-size:11px;color:var(--muted);font-weight:600;}
+  .math-desc{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;}
+  .math-desc b{color:var(--ink);}
+  .c-tp{color:var(--pos);font-weight:700;}
+  .c-tn{color:var(--pos);font-weight:700;}
+  .c-fp{color:var(--neg);font-weight:700;}
+  .c-fn{color:var(--neg);font-weight:700;}
+  .c-coord{color:#7e22ce;font-weight:800;}
 
-  footer{font-size:12px;color:var(--muted);line-height:1.6;padding-top:6px;}
-  footer b{color:var(--text);font-weight:500;}
+  .multi-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}.multi-card h2{font-size:15px;margin:0 0 5px}.multi-card p{font-size:12px;margin:0 0 8px;color:var(--muted)}.multi-card svg{width:100%;height:260px;display:block}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
+  body{max-width:1100px;margin:0 auto;padding:20px 24px 32px}.head{margin-bottom:14px}.head h1{font-size:22px}.head p{font-size:14px}.thresh-bar{padding:16px 18px;margin-bottom:14px}.thresh-top label{font-size:14px}.thresh-val{font-size:22px}.dotplot-wrap{flex:0 0 280px;padding:12px 14px 6px;margin-bottom:14px}.legend{font-size:12px;gap:14px}.row{gap:14px;margin-bottom:14px;min-height:280px}.cm-card,.roc-card{height:280px;border-radius:14px;padding:12px}.cm-title,.metrics-title{font-size:14px}.cm-sub{font-size:10px}.cm-colhead,.cm-rowhead{font-size:9px}.quad .code{font-size:10px}.quad .n{font-size:22px}.quad .l{font-size:9px}.metrics{gap:10px;grid-template-columns:repeat(6,1fr);margin-bottom:14px;}.metric{padding:10px 4px}.metric .lbl{font-size:11px}.metric .def{font-size:8px;min-height:20px}.metric .val{font-size:22px}
+  @media (max-width:850px){.metrics{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:560px){body{padding:14px 12px 24px}.head h1{font-size:18px}.head p{font-size:12px}.thresh-bar{padding:12px 14px}.dotplot-wrap{flex-basis:240px}.row{display:flex!important;flex-direction:column!important;min-height:0}.cm-card{display:flex!important;visibility:visible!important;order:1;width:100%;height:300px;min-height:300px;overflow:visible}.roc-card{display:flex!important;order:2;width:100%;height:240px;min-height:240px;overflow:hidden}.cm-grid{min-height:210px}.multi-card{padding:12px;overflow:hidden}.multi-card h2{font-size:14px}.multi-card p{font-size:11px}.multi-card svg{height:200px}.multi-table{font-size:10px}.multi-table th,.multi-table td{padding:6px 3px}.metrics{grid-template-columns:repeat(2,1fr)}.head p{max-width:100%}.table-card{padding:12px;}.roc-table{font-size:10px;}.roc-table th,.roc-table td{padding:5px 3px;}}
+  @media (min-height:760px){.head h1{font-size:16px;}.thresh-val{font-size:16px;}}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <div>
-      <h1>จุดตัดสัญญาณ</h1>
-      <p>ลากเกณฑ์ (τ) เพื่อดูว่าจุดไหนกลายเป็นเป้าหมายที่จับได้ จุดไหนเป็นสัญญาณเตือนหลอก — เกณฑ์นี้ใช้ร่วมกัน ทุกคนที่เปิดหน้านี้เห็นและขยับเข็มเดียวกัน</p>
-    </div>
-    <div class="tau-readout">
-      <div class="val mono" id="tauVal">0.500</div>
-      <div class="lbl">τ · เกณฑ์การตัดสิน</div>
-    </div>
-  </header>
-
-  <div class="panel">
-    <div class="strip-head">
-      <h2>โหมดชุดข้อมูล</h2>
-    </div>
-    <div class="mode-toggle" id="modeToggle">
-      <button type="button" class="mode-btn active" data-mode="balanced" aria-pressed="true">
-        ข้อมูลสมดุล (Balanced)
-        <span class="mode-sub">เป้าหมายจริง ≈ 50%</span>
-      </button>
-      <button type="button" class="mode-btn" data-mode="imbalanced" aria-pressed="false">
-        ข้อมูลเบ้สูง (Imbalanced)
-        <span class="mode-sub">เป้าหมายจริง ≈ 1% / พื้นหลัง 99%</span>
-      </button>
-    </div>
-    <p class="mode-desc" id="modeDesc">ชุดข้อมูลตอนนี้: <b id="modeCount">42</b> จุดตรวจจับ</p>
+  <div class="head">
+    <h1>Threshold Explorer — HR Attrition</h1>
+    <p>ลาก threshold หรือลากจุดบน ROC แล้วดู dot plot · confusion matrix เปลี่ยนพร้อมกันทั้งหมด</p>
   </div>
 
-  <div class="panel">
-    <div class="strip-head">
-      <h2>แถบสัญญาณ · <span id="stripCount">42</span> จุดตรวจจับ เรียงตามความน่าจะเป็น</h2>
-      <div class="sync" id="syncNote"><span class="dot"></span><span id="syncText">ซิงค์แล้ว</span></div>
+  <div class="thresh-bar">
+    <div class="thresh-top">
+      <label>Threshold</label>
+      <div class="thresh-val" id="thVal">0.5000</div>
     </div>
-    <div class="strip" id="strip">
-      <div class="threshold-line" id="threshLine"></div>
-      <div class="blip-layer" id="blipLayer"></div>
-      <div class="axis-tick" style="left:0%">0.0</div>
-      <div class="axis-tick" style="left:50%">0.5</div>
-      <div class="axis-tick" style="left:100%">1.0</div>
-    </div>
-    <input type="range" id="slider" min="0" max="1" step="0.005" value="0.5">
+    <input id="thSlider" type="range" min="0" max="1" step="0.0001" value="0.5">
+  </div>
+
+  <div class="dotplot-wrap">
+    <svg id="dotPlot" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="legend">
-      <span><i class="swatch pred-pos"></i>สีฟ้า = โมเดลทำนายว่า “ใช่”</span>
-      <span><i class="swatch pred-neg"></i>สีเทา = โมเดลทำนายว่า “ไม่ใช่”</span>
-      <span><i class="shape-dot"></i>● = ความจริงคือ “ไม่ใช่”</span>
-      <span><i class="shape-cross">✕</i> = ความจริงคือ “ใช่”</span>
-    </div>
-    <p class="legend-note">รวมสีกับรูปทรงเข้าด้วยกัน: <b>✕ สีฟ้า</b> = จับเป้าหมายได้ถูก (TP) · <b>● สีฟ้า</b> = แจ้งเตือนหลอก (FP) · <b>✕ สีเทา</b> = พลาดเป้าหมาย (FN) · <b>● สีเทา</b> = เพิกเฉยถูกต้อง (TN)</p>
-  </div>
-
-  <div class="grid2">
-    <div class="panel">
-      <div class="roc-title">
-        <h2>เส้นโค้ง ROC</h2>
-        <div class="auc mono">AUC <b id="aucVal">–</b></div>
-      </div>
-      <div class="coord mono" id="rocCoord">(FPR 0.00, TPR 0.00)</div>
-      <svg class="roc" id="rocSvg" viewBox="0 0 300 240"></svg>
-      <p class="curve-note">แกน Y (<b>TPR</b>) คือสัดส่วนที่จับเป้าหมายจริงได้ถูกต้อง (ค่าเดียวกับ Recall) แกน X (<b>FPR</b>) คือสัดส่วนที่แจ้งเตือนผิดจากของที่ไม่ใช่เป้าหมาย พื้นที่แรเงาคือ AUC เส้นประคือเส้น "เดามั่ว" (AUC = 0.5) — อธิบาย AUC แบบเข้าใจง่ายอยู่ในกล่องด้านล่างสุด</p>
-    </div>
-    <div class="panel">
-      <div class="roc-title">
-        <h2>เส้นโค้ง Precision-Recall</h2>
-        <div class="auc pr mono">PR-AUC <b id="apVal">–</b></div>
-      </div>
-      <div class="coord mono" id="prCoord">(Recall 0.00, Precision 0.00)</div>
-      <svg class="roc" id="prSvg" viewBox="0 0 300 240"></svg>
-      <p class="curve-note">แกน Y (<b>Precision</b>) คือเมื่อแจ้งเตือนแล้ว แม่นจริงกี่% แกน X (<b>Recall</b>) คือจับเป้าหมายจริงได้ครบแค่ไหน เส้นประคือเส้นฐาน "เดามั่ว" ซึ่งเท่ากับสัดส่วนเป้าหมายจริงในข้อมูลทั้งหมด — ยิ่งข้อมูลเบ้ เส้นฐานนี้ยิ่งอยู่ต่ำ</p>
+      <span><span style="color:var(--pos); font-size:16px;">●</span> สีเขียว = ทำนายถูก (TP / TN)</span>
+      <span><span style="color:var(--neg); font-size:16px;">●</span> สีแดง = ทำนายผิด (FP / FN)</span>
     </div>
   </div>
 
-  <div class="panel">
-    <h2 style="font-size:14px;font-weight:600;margin:0 0 10px;color:var(--text);">AUC จริง ๆ แล้ววัดอะไร?</h2>
-    <p style="font-size:13px;color:var(--muted);line-height:1.75;margin:0 0 16px;max-width:76ch;">
-      ลองจับคู่แบบสุ่ม: หยิบตัวอย่าง <b style="color:var(--text);font-weight:500;">เชิงลบ (ของปลอม)</b> มา 1 อัน กับ <b style="color:var(--text);font-weight:500;">เชิงบวก (ของจริง)</b> มา 1 อัน แล้วถามว่า "โมเดลให้คะแนนของจริงสูงกว่าของปลอมไหม" — <b style="color:var(--text);font-weight:500;">AUC คือความน่าจะเป็นที่คำตอบจะเป็น "ใช่"</b> เมื่อลองจับคู่แบบนี้ซ้ำ ๆ กับทุกคู่ที่เป็นไปได้ โดย<b style="color:var(--text);font-weight:500;">ไม่ต้องมีเกณฑ์ (τ) เข้ามาเกี่ยวข้องเลย</b> แถวด้านล่างคือข้อมูลทั้งหมดเรียงตามคะแนนที่โมเดลให้ (ไม่มีเส้นตัดเกณฑ์ใด ๆ) — ถ้าจุดสีม่วง (ของจริง) ส่วนใหญ่กระจุกอยู่ทางขวา ห่างจากจุดสีส้ม (ของปลอม) ที่กระจุกทางซ้าย แปลว่าโมเดลจัดอันดับได้ดี AUC ก็จะสูงตามไปด้วย
-    </p>
-    <div class="truth-strip" id="truthStrip"></div>
-    <div class="truth-axis"><span>0.0</span><span>0.2</span><span>0.4</span><span>0.6</span><span>0.8</span><span>1.0</span></div>
-    <div class="legend" style="margin-top:14px;">
-      <span><i class="swatch" style="background:var(--truth-neg);border-radius:50%;width:9px;height:9px;display:inline-block;"></i>● = ตัวอย่างเชิงลบจริง (ของปลอม)</span>
-      <span><i class="swatch" style="background:var(--truth-pos);border-radius:2px;width:9px;height:9px;display:inline-block;"></i>✕ = ตัวอย่างเชิงบวกจริง (ของจริง)</span>
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div class="panel">
-      <p class="cm-title">ตาราง Confusion ที่ τ ปัจจุบัน</p>
+  <div class="row" style="flex:1.3;">
+    <div class="cm-card">
+      <div class="cm-title">Confusion matrix</div>
+      <div class="cm-sub">แถว = ค่าจริง, คอลัมน์ = ค่าที่ทำนาย (ตัวเลข = สัดส่วนต่อแถว)</div>
       <div class="cm-grid">
-        <div class="cell tp"><div class="n mono" id="cTP">–</div><div class="cap">พบเป้าหมายจริง</div></div>
-        <div class="cell fp"><div class="n mono" id="cFP">–</div><div class="cap">แจ้งเตือนหลอก</div></div>
-        <div class="cell fn"><div class="n mono" id="cFN">–</div><div class="cap">พลาดเป้าหมาย</div></div>
-        <div class="cell tn"><div class="n mono" id="cTN">–</div><div class="cap">เพิกเฉยถูกต้อง</div></div>
-      </div>
-      <div class="metrics">
-        <div class="metric primary">
-          <div class="num mono" id="mRecall">–</div>
-          <div class="name">Recall (TPR)</div>
-          <div class="sub">จับเป้าหมายจริงได้ครบกี่% จากที่มีอยู่จริงทั้งหมด</div>
+        <div class="cm-corner"></div>
+        <div class="cm-colhead">ทำนาย<br>ไม่ลาออก</div>
+        <div class="cm-colhead">ทำนาย<br>ลาออก</div>
+
+        <div class="cm-rowhead">จริง<br>ไม่ลาออก</div>
+        <div class="quad tn">
+          <div style="color:var(--pos); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
+          <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
+            <div class="code">TN=</div><div class="n" id="cmTN">-</div>
+          </div>
+          <div class="l">ทำนายถูก</div>
         </div>
-        <div class="metric primary">
-          <div class="num mono" id="mAcc">–</div>
-          <div class="name">Accuracy</div>
-          <div class="sub">ทายถูกโดยรวมกี่% (นับทั้งบวกและลบ)</div>
+        <div class="quad fp">
+          <div style="color:var(--neg); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
+          <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
+            <div class="code">FP=</div><div class="n" id="cmFP">-</div>
+          </div>
+          <div class="l">ทำนายผิด</div>
         </div>
-        <div class="metric">
-          <div class="num mono" id="mPrec">–</div>
-          <div class="name">Precision</div>
-          <div class="sub">เมื่อแจ้งเตือนแล้ว แม่นจริงกี่%</div>
+
+        <div class="cm-rowhead">จริง<br>ลาออก</div>
+        <div class="quad fn">
+          <div style="color:var(--neg); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
+          <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
+            <div class="code">FN=</div><div class="n" id="cmFN">-</div>
+          </div>
+          <div class="l">ทำนายผิด</div>
         </div>
-        <div class="metric primary">
-          <div class="num mono" id="mF1">–</div>
-          <div class="name">F1-score</div>
-          <div class="sub">เลขเดียวที่รวม Precision กับ Recall เข้าด้วยกัน</div>
+        <div class="quad tp">
+          <div style="color:var(--pos); font-size:18px; line-height:1.1; margin-bottom:1px;">●</div>
+          <div style="display:flex; align-items:baseline; justify-content:center; gap:2px;">
+            <div class="code">TP=</div><div class="n" id="cmTP">-</div>
+          </div>
+          <div class="l">ทำนายถูก</div>
         </div>
       </div>
     </div>
-    <div class="panel insight-panel">
-      <h2>ทำไม ROC อาจ "หลอกตา" เมื่อข้อมูลเบ้?</h2>
-      <p id="insightText">กำลังคำนวณ…</p>
+    <div class="roc-card">
+      <svg id="rocPlot" viewBox="0 0 200 200"></svg>
     </div>
   </div>
 
-  <div class="panel multiclass-panel">
-    <h2>ถ้ามีมากกว่า 2 กลุ่มล่ะ? แนวคิด One-vs-One (OvO)</h2>
-    <p class="intro">เกม "ลากเกณฑ์ดูกราฟ ROC" ที่เล่นกันมาทั้งหน้านี้ ตอบได้แค่คำถาม 2 ทางเลือก (ใช่ / ไม่ใช่) เท่านั้น ทีนี้ลองสมมุติว่าสัญญาณที่ตรวจจับได้ ไม่ได้มีแค่ "ใช่เป้าหมาย" กับ "ไม่ใช่" แต่ต้องแยกเป็น 3 ระดับ คือ <b style="color:var(--text)">🟢 ปลอดภัย</b>, <b style="color:var(--text)">🟡 เฝ้าระวัง</b> และ <b style="color:var(--text)">🔴 อันตราย</b> — วาดกราฟ ROC เส้นเดียวตอบไม่ได้อีกต่อไป เพราะ ROC รู้จักแค่ "ใช่" กับ "ไม่ใช่"</p>
-    <p class="intro"><b style="color:var(--text)">ทางแก้แบบ One-vs-One (OvO):</b> แทนที่จะเอา 2 กลุ่มที่เหลือมา "รวมกัน" เป็นฝ่ายเดียวแบบ OvR เราเลือก <b style="color:var(--text)">จับคู่ทีละ 2 กลุ่ม</b> แล้ว<b style="color:var(--text)">ตัดกลุ่มที่ 3 ออกไปเลยชั่วคราว</b> (ไม่นับในรอบนั้น ไม่ใช่เอาไปรวม) ทำแบบนี้ให้ครบทุกคู่ที่เป็นไปได้ — นี่คือที่มาของชื่อ <b style="color:var(--text)">One-vs-One</b> (กลุ่มหนึ่ง ปะทะ อีกกลุ่มหนึ่งแบบตัวต่อตัว)</p>
+  <div class="metrics-title">Metric</div>
+  <div class="metrics">
+    <div class="metric">
+      <div class="lbl">Accuracy</div>
+      <div class="def">ทายถูกกี่% ของทั้งหมด</div>
+      <div class="val" id="mAcc">-</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">Precision</div>
+      <div class="def">ที่ทายว่าลาออก ถูกจริงกี่%</div>
+      <div class="val" id="mPrec">-</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">Recall / TPR</div>
+      <div class="def">แกน Y · จับคนลาออกจริงได้กี่%</div>
+      <div class="val" id="mTPR">-</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">FPR</div>
+      <div class="def">แกน X · ไม่ลาออกแต่ทายผิดกี่%</div>
+      <div class="val" id="mFPR">-</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">F1-score</div>
+      <div class="def">ค่าเฉลี่ย Precision &amp; Recall</div>
+      <div class="val" id="mF1">-</div>
+    </div>
+    <div class="metric" style="border-color:#d8b4fe; background:#faf5ff;">
+      <div class="lbl" style="color:#7e22ce;">คู่อันดับ (FPR, TPR)</div>
+      <div class="def">พิกัดจุด (X, Y) บนกราฟ ROC</div>
+      <div class="val" id="mCoord" style="color:#7e22ce; font-size:16px;">-</div>
+    </div>
+  </div>
 
-    <div class="ovr-grid">
-      <div class="ovr-card">
-        <div class="ovr-round">คู่ที่ 1 — ปลอดภัย ปะทะ เฝ้าระวัง</div>
-        <div class="ovr-classes">
-          <span class="ovr-dot active">🟢</span>
-          <span class="ovr-dot active">🟡</span>
-          <span class="ovr-dot excluded">🔴</span>
-        </div>
-        <div class="ovr-eq">🟢 ปลอดภัย <span class="vs">ปะทะ</span> 🟡 เฝ้าระวัง <span style="color:var(--muted);font-size:11px;">(ตัด 🔴 ออกชั่วคราว)</span></div>
-        <svg class="ovr-mini" viewBox="0 0 100 46" width="100%" height="40">
-          <line x1="4" y1="42" x2="96" y2="4" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
-          <path d="M4,42 C14,14 34,6 96,4" fill="none" style="stroke:var(--signal)" stroke-width="2"/>
-        </svg>
-        <div class="ovr-mini-cap">→ เส้น ROC เฉพาะคู่นี้</div>
+  <div class="math-card">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+      <h2>สูตรคำนวณคณิตศาสตร์แบบแทนค่าตัวเลขจริง (Live Math Substitution)</h2>
+      <div class="current-pair-badge">
+        เกณฑ์ τ = <span id="mathThVal">0.5000</span> (TP=<b class="c-tp" id="m_hdr_tp">-</b>, FP=<b class="c-fp" id="m_hdr_fp">-</b>, TN=<b class="c-tn" id="m_hdr_tn">-</b>, FN=<b class="c-fn" id="m_hdr_fn">-</b>)
       </div>
-      <div class="ovr-card">
-        <div class="ovr-round">คู่ที่ 2 — ปลอดภัย ปะทะ อันตราย</div>
-        <div class="ovr-classes">
-          <span class="ovr-dot active">🟢</span>
-          <span class="ovr-dot excluded">🟡</span>
-          <span class="ovr-dot active">🔴</span>
+    </div>
+    <p>
+      อิงจากการเลื่อน Threshold ด้านบน ค่า <b>TP, FP, TN, FN</b> จะเปลี่ยนไป และสูตรคณิตศาสตร์ด้านล่างจะนำตัวเลขจริงทั้งหมดมาแทนค่าและคำนวณให้เห็นเป็นขั้นตอนแบบเรียลไทม์
+    </p>
+
+    <div class="math-grid">
+      <!-- 1. TPR -->
+      <div class="math-box highlight">
+        <div class="math-box-title">
+          <span>1. TPR (True Positive Rate / Recall / Sensitivity)</span>
+          <span style="color:#7e22ce; font-size:11px;">แกน Y บนกราฟ ROC</span>
         </div>
-        <div class="ovr-eq">🟢 ปลอดภัย <span class="vs">ปะทะ</span> 🔴 อันตราย <span style="color:var(--muted);font-size:11px;">(ตัด 🟡 ออกชั่วคราว)</span></div>
-        <svg class="ovr-mini" viewBox="0 0 100 46" width="100%" height="40">
-          <line x1="4" y1="42" x2="96" y2="4" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
-          <path d="M4,42 C20,24 44,10 96,4" fill="none" style="stroke:var(--signal)" stroke-width="2"/>
-        </svg>
-        <div class="ovr-mini-cap">→ เส้น ROC เฉพาะคู่นี้</div>
+        <div class="math-row">
+          <span class="math-sym">TPR</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp">TP</span></span>
+            <span class="denom"><span class="c-tp">TP</span> + <span class="c-fn">FN</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_tpr_tp">0</span></span>
+            <span class="denom"><span class="c-tp" id="m_tpr_tp2">0</span> + <span class="c-fn" id="m_tpr_fn">0</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_tpr_tp3">0</span></span>
+            <span class="denom" id="m_tpr_pos">47</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result c-tp" id="m_tpr_dec">0.0000</span>
+          <span class="math-pct" id="m_tpr_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_tpr_desc">คำนวณสัดส่วนคนลาออกจริงที่โมเดลจับได้ถูกต้อง</div>
       </div>
-      <div class="ovr-card">
-        <div class="ovr-round">คู่ที่ 3 — เฝ้าระวัง ปะทะ อันตราย</div>
-        <div class="ovr-classes">
-          <span class="ovr-dot excluded">🟢</span>
-          <span class="ovr-dot active">🟡</span>
-          <span class="ovr-dot active">🔴</span>
+
+      <!-- 2. FPR -->
+      <div class="math-box highlight">
+        <div class="math-box-title">
+          <span>2. FPR (False Positive Rate / Fall-out)</span>
+          <span style="color:#7e22ce; font-size:11px;">แกน X บนกราฟ ROC</span>
         </div>
-        <div class="ovr-eq">🟡 เฝ้าระวัง <span class="vs">ปะทะ</span> 🔴 อันตราย <span style="color:var(--muted);font-size:11px;">(ตัด 🟢 ออกชั่วคราว)</span></div>
-        <svg class="ovr-mini" viewBox="0 0 100 46" width="100%" height="40">
-          <line x1="4" y1="42" x2="96" y2="4" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
-          <path d="M4,42 C24,30 54,16 96,4" fill="none" style="stroke:var(--signal)" stroke-width="2"/>
-        </svg>
-        <div class="ovr-mini-cap">→ เส้น ROC เฉพาะคู่นี้</div>
+        <div class="math-row">
+          <span class="math-sym">FPR</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp">FP</span></span>
+            <span class="denom"><span class="c-fp">FP</span> + <span class="c-tn">TN</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp" id="m_fpr_fp">0</span></span>
+            <span class="denom"><span class="c-fp" id="m_fpr_fp2">0</span> + <span class="c-tn" id="m_fpr_tn">0</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp" id="m_fpr_fp3">0</span></span>
+            <span class="denom" id="m_fpr_neg">247</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result c-fp" id="m_fpr_dec">0.0000</span>
+          <span class="math-pct" id="m_fpr_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_fpr_desc">คำนวณสัดส่วนคนไม่ลาออกแต่โมเดลทายผิดว่าลาออก</div>
+      </div>
+
+      <!-- 3. Ordered Pair (FPR, TPR) -->
+      <div class="math-box highlight">
+        <div class="math-box-title">
+          <span>3. คู่อันดับพิกัดฉาก 2 มิติ (FPR, TPR)</span>
+          <span style="color:#7e22ce; font-size:11px;">พล็อตจุดบน ROC Curve</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">(x, y)</span>
+          <span class="math-op">=</span>
+          <span style="font-weight:600;">(FPR, TPR)</span>
+          <span class="math-op">=</span>
+          <span>(</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp" id="m_pair_fp">0</span></span>
+            <span class="denom" id="m_pair_neg">247</span>
+          </span>
+          <span>,</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_pair_tp">0</span></span>
+            <span class="denom" id="m_pair_pos">47</span>
+          </span>
+          <span>)</span>
+          <span class="math-op">=</span>
+          <span class="math-result c-coord" id="m_pair_coord">(0.000, 0.000)</span>
+        </div>
+        <div class="math-desc" id="m_pair_desc">พิกัดจุด 2D บนกราฟ ROC: แกน X = FPR, แกน Y = TPR</div>
+      </div>
+
+      <!-- 4. Precision -->
+      <div class="math-box">
+        <div class="math-box-title">
+          <span>4. Precision (ความแม่นยำของการทายว่าลาออก)</span>
+          <span style="color:var(--muted); font-size:11px;">TP / (TP + FP)</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">Prec</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp">TP</span></span>
+            <span class="denom"><span class="c-tp">TP</span> + <span class="c-fp">FP</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_prec_tp">0</span></span>
+            <span class="denom"><span class="c-tp" id="m_prec_tp2">0</span> + <span class="c-fp" id="m_prec_fp">0</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_prec_tp3">0</span></span>
+            <span class="denom" id="m_prec_predpos">0</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result" id="m_prec_dec">0.0000</span>
+          <span class="math-pct" id="m_prec_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_prec_desc">ในกลุ่มคนที่ทำนายว่าลาออกทั้งหมด ถูกต้องจริงกี่คน</div>
+      </div>
+
+      <!-- 5. Accuracy -->
+      <div class="math-box">
+        <div class="math-box-title">
+          <span>5. Accuracy (ความถูกต้องโดยรวมทั้งหมด)</span>
+          <span style="color:var(--muted); font-size:11px;">(TP + TN) / Total</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">Acc</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp">TP</span> + <span class="c-tn">TN</span></span>
+            <span class="denom">TP + TN + FP + FN</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_acc_tp">0</span> + <span class="c-tn" id="m_acc_tn">0</span></span>
+            <span class="denom" id="m_acc_tot">294</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num" id="m_acc_correct">0</span>
+            <span class="denom" id="m_acc_tot2">294</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result" id="m_acc_dec">0.0000</span>
+          <span class="math-pct" id="m_acc_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_acc_desc">ทายถูกทั้งหมด (TP + TN) เทียบกับตัวอย่างทั้งหมด 294 รายการ</div>
+      </div>
+
+      <!-- 6. F1-Score -->
+      <div class="math-box">
+        <div class="math-box-title">
+          <span>6. F1-Score (ค่าเฉลี่ยฮาร์โมนิก Precision & Recall)</span>
+          <span style="color:var(--muted); font-size:11px;">2·(P·R)/(P+R)</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">F1</span>
+          <span class="math-op">=</span>
+          <span class="math-op">2 ×</span>
+          <span class="math-frac">
+            <span class="num">Prec × Recall</span>
+            <span class="denom">Prec + Recall</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-op">2 ×</span>
+          <span class="math-frac">
+            <span class="num"><span id="m_f1_prec">0.00</span> × <span id="m_f1_tpr">0.00</span></span>
+            <span class="denom"><span id="m_f1_prec2">0.00</span> + <span id="m_f1_tpr2">0.00</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num" id="m_f1_num">0.0000</span>
+            <span class="denom" id="m_f1_denom">0.0000</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result" id="m_f1_dec">0.0000</span>
+        </div>
+        <div class="math-desc" id="m_f1_desc">สมดุลระหว่างความแม่นยำ Precision และความครอบคลุม Recall</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+      <h2>ตารางแจกแจงค่าและคู่อันดับ (FPR, TPR) สำหรับ ROC Curve</h2>
+      <div class="current-pair-badge">
+        เกณฑ์ปัจจุบัน τ = <span id="curThBadge">0.5000</span> → คู่อันดับ (FPR, TPR) = <b id="curPairBadge" style="color:#7e22ce;">(0.000, 0.000)</b>
+      </div>
+    </div>
+    <p>
+      เส้นโค้ง ROC เกิดจากการนำ <b>คู่อันดับ (FPR, TPR)</b> ที่ระดับ Threshold ต่าง ๆ มาพล็อตลงบนแกนพิกัดฉาก โดยแกน X คือ <b>FPR</b> (อัตราผลบวกลวง) และแกน Y คือ <b>TPR</b> (อัตราผลบวกจริง หรือ Recall) คลิกที่แถวเพื่อเปลี่ยนเกณฑ์ไปยังจุดนั้น
+    </p>
+
+    <div class="table-controls">
+      <div class="tab-btn-group">
+        <button type="button" class="tab-btn active" data-mode="step" onclick="switchTableTab('step')">ช่วงสเต็ป 0.05 (21 จุด)</button>
+        <button type="button" class="tab-btn" data-mode="cutoffs" onclick="switchTableTab('cutoffs')">จุดเปลี่ยนสำคัญ (Distinct Cutoffs)</button>
+        <button type="button" class="tab-btn" data-mode="all" onclick="switchTableTab('all')">ข้อมูลคะแนนทั้งหมด</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; font-size:12px;">
+        <span style="color:#444;">แสดง <b id="tablePointCount">21</b> จุด</span>
+        <button type="button" class="tab-btn" onclick="scrollToActiveRow()" style="background:#f3e8ff; border-color:#d8b4fe; color:#6b21a8;">📍 เลื่อนไปแถวเกณฑ์ปัจจุบัน</button>
       </div>
     </div>
 
-    <p class="ovr-note"><b style="color:var(--text)">OvO vs OvR ต่างกันตรงไหน:</b> OvO ไม่เอา 2 กลุ่มไปรวมกันเป็น "ฝ่ายที่เหลือ" เหมือน OvR เลยไม่เสียลักษณะเฉพาะของแต่ละกลุ่ม และไม่เกิดปัญหาข้อมูลเบ้จากการรวมกลุ่ม (เช่น รวม 🟡+🔴 เป็นฝ่ายเดียวอาจทำให้สัดส่วนเพี้ยนไปจากของจริง) แต่ข้อเสียคือจำนวนคู่ที่ต้องคำนวณเพิ่มเร็วกว่ามากเมื่อมีหลายกลุ่ม (สูตรคือ k(k-1)/2 คู่) — กรณีนี้มี 3 กลุ่มพอดี เลยคำนวณแค่ 3 คู่ เท่ากับจำนวนรอบของ OvR แต่ถ้ามี 10 กลุ่ม OvO ต้องคำนวณถึง 45 คู่ ในขณะที่ OvR คำนวณแค่ 10 รอบเท่านั้น สุดท้ายพอได้ ROC มาหลายคู่ ก็นำ AUC ของทุกคู่มาเฉลี่ยรวมกัน (<b style="color:var(--text)">Macro-average</b>) เพื่อสรุปเป็นตัวเลขเดียวเหมือนเดิม</p>
+    <div class="table-scroll" id="tableScrollContainer">
+      <table class="roc-table">
+        <thead>
+          <tr>
+            <th style="width:45px;">จุดที่</th>
+            <th>Threshold (τ)</th>
+            <th>TP</th>
+            <th>FP</th>
+            <th>TN</th>
+            <th>FN</th>
+            <th>FPR (x)</th>
+            <th>TPR (y)</th>
+            <th style="text-align:center;">คู่อันดับ (FPR, TPR)</th>
+            <th style="width:70px; text-align:center;">เลือกจุด</th>
+          </tr>
+        </thead>
+        <tbody id="rocTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="panel" id="multiMetricPanel">
-    <div class="roc-title"><h2>Multi-class ROC-AUC · threshold เดียวกัน</h2><div class="auc mono">Macro <b id="multiMacroAuc">–</b> · Micro <b id="multiMicroAuc">–</b></div></div>
-    <p class="curve-note">คำนวณแบบ One-vs-Rest จากข้อมูลตัวอย่าง 3 คลาส จุดสีบนกราฟและ Precision/Recall จะเปลี่ยนตามค่า τ ปัจจุบัน ส่วน AUC เป็นค่าจากทุก threshold</p>
-    <svg class="roc" id="multiRocSvg" viewBox="0 0 300 240"></svg>
-    <div class="multi-table-wrap"><table class="multi-table"><thead><tr><th>Class</th><th>ROC-AUC</th><th>Precision @ τ</th><th>Recall @ τ</th></tr></thead><tbody id="multiRows"></tbody></table></div>
+  <div class="multi-card">
+    <h2>Multi-class ROC-AUC · threshold เดียวกัน</h2>
+    <p>จุดสีเปลี่ยนตาม threshold ปัจจุบัน ส่วน AUC คำนวณจากทุก threshold</p>
+    <svg id="multiRocPlot" viewBox="0 0 400 220"></svg>
+    <table class="multi-table"><thead><tr><th>Class</th><th>ROC-AUC</th><th>Precision</th><th>Recall</th></tr></thead><tbody id="multiRows"></tbody></table>
   </div>
-
-  <footer>
-    <b>ข้อมูลที่ใช้ร่วมกัน:</b> ตำแหน่งเกณฑ์ (τ) และโหมดชุดข้อมูลจะถูกบันทึกแบบสาธารณะ ผู้ที่เปิดหน้านี้คนอื่นจะเห็นค่าเดียวกับที่คุณตั้งไว้ และถ้าพวกเขาขยับ คุณจะเห็นมันเปลี่ยนตามภายในไม่กี่วินาที
-  </footer>
-
-</div>
 
 <script>
-(function(){
-  // ================= deterministic PRNG (mulberry32) =================
-  function mulberry32(seed){
-    return function(){
-      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
-      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+const rawData = [{"score":0.0739,"label":0},{"score":0.0023,"label":0},{"score":0.1093,"label":0},{"score":0.0063,"label":0},{"score":0.3265,"label":1},{"score":0.2762,"label":0},{"score":0.0078,"label":0},{"score":0.0234,"label":0},{"score":0.0031,"label":0},{"score":0.0845,"label":0},{"score":0.0489,"label":0},{"score":0.0839,"label":0},{"score":0.41,"label":0},{"score":0.1674,"label":0},{"score":0.2858,"label":0},{"score":0.4089,"label":0},{"score":0.0163,"label":0},{"score":0.0053,"label":0},{"score":0.2674,"label":0},{"score":0.0116,"label":0},{"score":0.4667,"label":1},{"score":0.1037,"label":1},{"score":0.1108,"label":0},{"score":0.0129,"label":0},{"score":0.0042,"label":0},{"score":0.5123,"label":0},{"score":0.0872,"label":0},{"score":0.0717,"label":1},{"score":0.008,"label":0},{"score":0.0087,"label":1},{"score":0.0061,"label":0},{"score":0.1503,"label":0},{"score":0.0518,"label":0},{"score":0.0688,"label":0},{"score":0.1783,"label":0},{"score":0.8204,"label":1},{"score":0.0151,"label":0},{"score":0.0231,"label":0},{"score":0.0535,"label":0},{"score":0.4989,"label":1},{"score":0.0032,"label":0},{"score":0.5668,"label":0},{"score":0.0104,"label":0},{"score":0.0411,"label":0},{"score":0.1143,"label":0},{"score":0.0513,"label":0},{"score":0.3927,"label":0},{"score":0.3872,"label":0},{"score":0.0218,"label":0},{"score":0.0561,"label":0},{"score":0.0842,"label":0},{"score":0.0256,"label":0},{"score":0.0152,"label":0},{"score":0.2384,"label":0},{"score":0.0147,"label":0},{"score":0.0278,"label":0},{"score":0.0353,"label":0},{"score":0.7971,"label":1},{"score":0.0812,"label":0},{"score":0.0185,"label":0},{"score":0.038,"label":0},{"score":0.003,"label":0},{"score":0.0173,"label":0},{"score":0.0843,"label":0},{"score":0.0903,"label":0},{"score":0.0202,"label":0},{"score":0.1527,"label":0},{"score":0.2511,"label":1},{"score":0.0824,"label":0},{"score":0.028,"label":0},{"score":0.4307,"label":0},{"score":0.0047,"label":0},{"score":0.0041,"label":0},{"score":0.0818,"label":0},{"score":0.0451,"label":0},{"score":0.0067,"label":0},{"score":0.0006,"label":0},{"score":0.0079,"label":0},{"score":0.1689,"label":0},{"score":0.0159,"label":0},{"score":0.0228,"label":0},{"score":0.8591,"label":1},{"score":0.003,"label":1},{"score":0.0006,"label":0},{"score":0.0298,"label":0},{"score":0.1186,"label":0},{"score":0.0024,"label":0},{"score":0.1014,"label":1},{"score":0.027,"label":0},{"score":0.0607,"label":0},{"score":0.0229,"label":0},{"score":0.0029,"label":0},{"score":0.9709,"label":1},{"score":0.2428,"label":0},{"score":0.2425,"label":0},{"score":0.8718,"label":1},{"score":0.6485,"label":0},{"score":0.0477,"label":1},{"score":0.1408,"label":0},{"score":0.4313,"label":0},{"score":0.001,"label":0},{"score":0.6413,"label":0},{"score":0.1198,"label":0},{"score":0.02,"label":0},{"score":0.6492,"label":0},{"score":0.0253,"label":0},{"score":0.0748,"label":0},{"score":0.0003,"label":0},{"score":0.1172,"label":1},{"score":0.0859,"label":0},{"score":0.2905,"label":0},{"score":0.1502,"label":0},{"score":0.0257,"label":0},{"score":0.1053,"label":0},{"score":0.0701,"label":0},{"score":0.0435,"label":0},{"score":0.0629,"label":0},{"score":0.0327,"label":0},{"score":0.0472,"label":0},{"score":0.0168,"label":0},{"score":0.0736,"label":0},{"score":0.3652,"label":0},{"score":0.0074,"label":0},{"score":0.1204,"label":0},{"score":0.6592,"label":0},{"score":0.0295,"label":0},{"score":0.3544,"label":0},{"score":0.6262,"label":1},{"score":0.1625,"label":0},{"score":0.075,"label":0},{"score":0.7037,"label":1},{"score":0.0032,"label":0},{"score":0.0443,"label":1},{"score":0.4219,"label":0},{"score":0.0696,"label":0},{"score":0.1057,"label":0},{"score":0.391,"label":0},{"score":0.1543,"label":0},{"score":0.1747,"label":0},{"score":0.0044,"label":0},{"score":0.0007,"label":0},{"score":0.0059,"label":0},{"score":0.0527,"label":0},{"score":0.6683,"label":0},{"score":0.2468,"label":1},{"score":0.0186,"label":0},{"score":0.2918,"label":0},{"score":0.0632,"label":0},{"score":0.0174,"label":0},{"score":0.0021,"label":0},{"score":0.0162,"label":0},{"score":0.0821,"label":0},{"score":0.0765,"label":0},{"score":0.0046,"label":0},{"score":0.0375,"label":0},{"score":0.2978,"label":1},{"score":0.214,"label":1},{"score":0.0038,"label":0},{"score":0.7309,"label":1},{"score":0.1991,"label":0},{"score":0.0553,"label":0},{"score":0.051,"label":0},{"score":0.1059,"label":1},{"score":0.0133,"label":0},{"score":0.3009,"label":1},{"score":0.022,"label":0},{"score":0.0505,"label":1},{"score":0.1402,"label":0},{"score":0.4328,"label":1},{"score":0.0442,"label":0},{"score":0.216,"label":0},{"score":0.0394,"label":0},{"score":0.4857,"label":0},{"score":0.5099,"label":0},{"score":0.1771,"label":1},{"score":0.0092,"label":0},{"score":0.5039,"label":1},{"score":0.0038,"label":0},{"score":0.1472,"label":1},{"score":0.0939,"label":0},{"score":0.239,"label":0},{"score":0.1227,"label":0},{"score":0.0331,"label":0},{"score":0.4197,"label":1},{"score":0.0309,"label":0},{"score":0.0031,"label":0},{"score":0.0141,"label":0},{"score":0.0085,"label":0},{"score":0.0147,"label":0},{"score":0.3896,"label":0},{"score":0.2147,"label":1},{"score":0.0198,"label":0},{"score":0.0689,"label":0},{"score":0.0083,"label":0},{"score":0.0003,"label":0},{"score":0.2368,"label":0},{"score":0.101,"label":1},{"score":0.159,"label":0},{"score":0.0561,"label":0},{"score":0.1474,"label":0},{"score":0.8737,"label":1},{"score":0.0033,"label":0},{"score":0.0496,"label":0},{"score":0.158,"label":0},{"score":0.1245,"label":0},{"score":0.001,"label":0},{"score":0.0081,"label":0},{"score":0.2282,"label":0},{"score":0.0353,"label":0},{"score":0.0154,"label":0},{"score":0.0405,"label":0},{"score":0.0054,"label":0},{"score":0.0027,"label":0},{"score":0.0605,"label":0},{"score":0.9799,"label":1},{"score":0.0752,"label":0},{"score":0.0167,"label":0},{"score":0.0578,"label":0},{"score":0.1004,"label":0},{"score":0.6217,"label":1},{"score":0.0018,"label":0},{"score":0.055,"label":0},{"score":0.1925,"label":1},{"score":0.5557,"label":0},{"score":0.2368,"label":0},{"score":0.0211,"label":0},{"score":0.1046,"label":0},{"score":0.3311,"label":0},{"score":0.0021,"label":0},{"score":0.0224,"label":0},{"score":0.0258,"label":0},{"score":0.0117,"label":0},{"score":0.0285,"label":0},{"score":0.0257,"label":0},{"score":0.0015,"label":0},{"score":0.1485,"label":0},{"score":0.0295,"label":0},{"score":0.0146,"label":0},{"score":0.0403,"label":1},{"score":0.0599,"label":0},{"score":0.0006,"label":1},{"score":0.2309,"label":0},{"score":0.0039,"label":0},{"score":0.1864,"label":0},{"score":0.0282,"label":0},{"score":0.2577,"label":0},{"score":0.037,"label":1},{"score":0.0586,"label":0},{"score":0.0462,"label":0},{"score":0.0368,"label":0},{"score":0.6337,"label":1},{"score":0.3205,"label":1},{"score":0.0238,"label":0},{"score":0.1107,"label":0},{"score":0.0024,"label":0},{"score":0.0115,"label":0},{"score":0.8182,"label":1},{"score":0.134,"label":0},{"score":0.0595,"label":0},{"score":0.0028,"label":0},{"score":0.0003,"label":0},{"score":0.0077,"label":0},{"score":0.0021,"label":0},{"score":0.0039,"label":0},{"score":0.0113,"label":0},{"score":0.0862,"label":0},{"score":0.0313,"label":0},{"score":0.0741,"label":0},{"score":0.0379,"label":0},{"score":0.002,"label":0},{"score":0.2918,"label":1},{"score":0.0164,"label":0},{"score":0.0305,"label":0},{"score":0.6303,"label":0},{"score":0.0051,"label":0},{"score":0.1488,"label":0},{"score":0.6187,"label":1},{"score":0.0868,"label":0},{"score":0.0948,"label":0},{"score":0.1885,"label":0},{"score":0.0491,"label":0},{"score":0.1254,"label":0},{"score":0.0601,"label":0},{"score":0.1789,"label":0},{"score":0.0312,"label":0},{"score":0.187,"label":0},{"score":0.0009,"label":0},{"score":0.7765,"label":1},{"score":0.2346,"label":0},{"score":0.0131,"label":0},{"score":0.0084,"label":0},{"score":0.4712,"label":1},{"score":0.0081,"label":0},{"score":0.0022,"label":0}];
+
+const svgNS = "http://www.w3.org/2000/svg";
+const BIN = 0.025;
+function binKey(s){ return Math.round(s / BIN) * BIN; }
+
+function el(tag, attrs){
+  const n = document.createElementNS(svgNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+function computeCounts(threshold){
+  let TP=0, FP=0, TN=0, FN=0;
+  rawData.forEach(d=>{
+    const pred = d.score >= threshold ? 1 : 0;
+    if (pred===1 && d.label===1) TP++;
+    else if (pred===1 && d.label===0) FP++;
+    else if (pred===0 && d.label===1) FN++;
+    else TN++;
+  });
+  return {TP,FP,TN,FN};
+}
+
+let rocPts = null;
+function rocCurvePoints(){
+  if (rocPts) return rocPts;
+  rocPts = [];
+  // เพิ่มความละเอียดจุดบน ROC เป็น 0.001 เพื่อไม่ให้โดดเวลาลาก
+  for (let t=0; t<=1.0001; t+=0.001){
+    const {TP,FP,TN,FN} = computeCounts(t);
+    const tpr = (TP+FN) ? TP/(TP+FN) : 0;
+    const fpr = (FP+TN) ? FP/(FP+TN) : 0;
+    rocPts.push([fpr, tpr, t]); 
+  }
+  return rocPts;
+}
+
+// แคชเพื่อเก็บ Object ของ SVG ป้องกันการสร้างใหม่ทุกรอบ
+let dpCache = null; 
+
+function drawDotPlot(threshold){
+  const svg = document.getElementById('dotPlot');
+  const W = 400, H = 220;
+  const padL = 12, padR = 12, padT = 6, padB = 16;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const xForScore = s => padL + s * chartW;
+  const thX = xForScore(threshold);
+
+  // สร้าง Elements ครั้งเดียว
+  if (!dpCache) {
+    svg.innerHTML = "";
+    dpCache = {
+      bgNeg: el('rect', {x:padL, y:padT, height:chartH, fill:'#fee2e2'}),
+      bgPos: el('rect', {y:padT, height:chartH, fill:'#dcfce7'}),
+      line: el('line', {y1:padT, y2:padT+chartH, stroke:'var(--line)', 'stroke-width':1.6}),
+      dots: []
     };
+    svg.appendChild(dpCache.bgNeg);
+    svg.appendChild(dpCache.bgPos);
+    svg.appendChild(dpCache.line);
+
+    for (let t=0; t<=1.0001; t+=0.2){
+      const x = xForScore(t);
+      const lbl = el('text', {x, y:padT+chartH+12, 'text-anchor':'middle','font-size':'9', fill:'#000000'});
+      lbl.textContent = t.toFixed(1);
+      svg.appendChild(lbl);
+    }
+
+    const bins = {};
+    rawData.forEach(d=>{
+      const k = binKey(d.score);
+      (bins[k] = bins[k] || []).push(d);
+    });
+    const dotR = Math.max(1.6, Math.min(3.2, chartW / (Object.keys(bins).length*2.2)));
+    const dotGap = dotR*2.15;
+
+    Object.keys(bins).forEach(k=>{
+      const items = bins[k];
+      const x = xForScore(parseFloat(k));
+      items.forEach((d, idx)=>{
+        const y = padT + chartH - dotR - idx*dotGap;
+        if (y < padT) return; 
+        const node = el('circle', {cx:x, cy:y, r:dotR, stroke:'#ffffff', 'stroke-width':0.5});
+        svg.appendChild(node);
+        dpCache.dots.push({ node, score: d.score, label: d.label, lastColor: null });
+      });
+    });
   }
 
-  // ================= datasets: {p: predicted probability, y: true label 1=target 0=clutter} =================
-  var DATA_BALANCED = [
-    {p:0.120,y:0},{p:0.169,y:0},{p:0.219,y:0},{p:0.219,y:0},{p:0.240,y:0},
-    {p:0.265,y:1},{p:0.265,y:1},{p:0.287,y:0},{p:0.291,y:0},{p:0.295,y:1},
-    {p:0.304,y:0},{p:0.306,y:0},{p:0.335,y:0},{p:0.339,y:1},{p:0.346,y:0},
-    {p:0.417,y:0},{p:0.418,y:0},{p:0.441,y:0},{p:0.494,y:1},{p:0.531,y:0},
-    {p:0.535,y:1},{p:0.541,y:0},{p:0.576,y:0},{p:0.583,y:1},{p:0.608,y:1},
-    {p:0.621,y:0},{p:0.631,y:1},{p:0.645,y:1},{p:0.645,y:1},{p:0.653,y:1},
-    {p:0.655,y:0},{p:0.685,y:1},{p:0.751,y:1},{p:0.752,y:1},{p:0.762,y:1},
-    {p:0.774,y:1},{p:0.786,y:1},{p:0.789,y:0},{p:0.844,y:1},{p:0.935,y:1},
-    {p:0.955,y:1},{p:0.973,y:1}
-  ];
+  // สีบอกผลลัพธ์: เขียว = ทำนายถูก, แดง = ทำนายผิด
+  dpCache.bgNeg.setAttribute('width', Math.max(0, thX-padL));
+  dpCache.bgPos.setAttribute('x', thX);
+  dpCache.bgPos.setAttribute('width', Math.max(0, padL+chartW-thX));
+  dpCache.line.setAttribute('x1', thX);
+  dpCache.line.setAttribute('x2', thX);
 
-  // ~99% negative / 1% positive, generated with a fixed seed so every visitor
-  // sees the exact same "highly imbalanced" scenario.
-  function generateImbalanced(){
-    var rand = mulberry32(42);
-    var data = [];
-    var nNeg = 297, nPos = 3;
-    for (var i=0;i<nNeg;i++){
-      var u = rand();
-      var score = Math.pow(u, 3) * 0.95; // heavy skew toward low scores, long tail up
-      data.push({p: +Math.min(0.97, score).toFixed(3), y:0});
+  // อัปเดตเฉพาะสีหน้า/ไอคอน ถ้ามีการเปลี่ยนแปลงเท่านั้น
+  dpCache.dots.forEach(d => {
+    const predictedPositive = d.score >= threshold;
+    let color = "";
+
+    if (predictedPositive && d.label === 1) {
+      color = "var(--pos)";
+    } else if (!predictedPositive && d.label === 0) {
+      color = "var(--pos)";
+    } else if (predictedPositive && d.label === 0) {
+      color = "var(--neg)";
+    } else {
+      color = "var(--neg)";
     }
-    for (var j=0;j<nPos;j++){
-      var u2 = rand();
-      var score2 = 0.42 + 0.55 * (1 - Math.pow(u2, 1.6)); // skewed toward high scores
-      data.push({p: +Math.min(0.985, score2).toFixed(3), y:1});
+
+    if (d.lastColor !== color) {
+      d.node.setAttribute('fill', color);
+      d.lastColor = color;
     }
-    data.sort(function(a,b){ return a.p - b.p; });
-    return data;
-  }
+  });
+}
 
-  var DATA_SETS = { balanced: DATA_BALANCED, imbalanced: generateImbalanced() };
+function drawConfusionMatrix(threshold){
+  const {TP,FP,TN,FN} = computeCounts(threshold);
+  document.getElementById('cmTP').textContent = TP;
+  document.getElementById('cmFP').textContent = FP;
+  document.getElementById('cmFN').textContent = FN;
+  document.getElementById('cmTN').textContent = TN;
 
-  // ================= confusion / metrics helpers (accept a dataset) =================
-  function confusionAt(data, tau){
-    var tp=0,fp=0,fn=0,tn=0;
-    for (var i=0;i<data.length;i++){
-      var d = data[i];
-      var pred = d.p >= tau ? 1 : 0;
-      if (pred===1 && d.y===1) tp++;
-      else if (pred===1 && d.y===0) fp++;
-      else if (pred===0 && d.y===1) fn++;
-      else tn++;
+  const total = TP+FP+TN+FN;
+  const acc = total ? (TP+TN)/total : 0;
+  const prec = (TP+FP) ? TP/(TP+FP) : 0;
+  const tpr = (TP+FN) ? TP/(TP+FN) : 0;
+  const fpr = (FP+TN) ? FP/(FP+TN) : 0;
+  const f1 = (prec+tpr) ? 2*prec*tpr/(prec+tpr) : 0;
+
+  document.getElementById('mAcc').textContent = (acc * 100).toFixed(0) + '%';
+  document.getElementById('mPrec').textContent = (prec * 100).toFixed(0) + '%';
+  document.getElementById('mTPR').textContent = (tpr * 100).toFixed(0) + '%';
+  document.getElementById('mFPR').textContent = (fpr * 100).toFixed(1) + '%';
+  document.getElementById('mF1').textContent = (f1 * 100).toFixed(0) + '%';
+  document.getElementById('mCoord').textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  const curPairEl = document.getElementById('curPairBadge');
+  if (curPairEl) curPairEl.textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  const curThEl = document.getElementById('curThBadge');
+  if (curThEl) curThEl.textContent = threshold.toFixed(4);
+
+  return {TP,FP,TN,FN,acc,prec,tpr,fpr,f1};
+}
+
+let rocCache = null;
+function drawRocPoint(threshold, tprfpr){
+  const svg = document.getElementById('rocPlot');
+  const W = 200, H = 200;
+  const padL = 34, padR = 10, padT = 26, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  if (!rocCache) {
+    svg.innerHTML = "";
+    const title = el('text', {x:W/2, y:14, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700', fill:'#000000'});
+    title.textContent = 'ROC curve (ลากจุดได้)';
+    svg.appendChild(title);
+
+    for (let g=0; g<=1.0001; g+=0.2){
+      const gx = padL + g*plotW;
+      const gy = padT + (1-g)*plotH;
+      svg.appendChild(el('line', {x1:gx, y1:padT, x2:gx, y2:padT+plotH, stroke:'#eef0f4', 'stroke-width':1}));
+      svg.appendChild(el('line', {x1:padL, y1:gy, x2:padL+plotW, y2:gy, stroke:'#eef0f4', 'stroke-width':1}));
+      const xl = el('text', {x:gx, y:padT+plotH+12, 'text-anchor':'middle', 'font-size':'8', fill:'#000000'});
+      xl.textContent = g.toFixed(1); svg.appendChild(xl);
+      const yl = el('text', {x:padL-5, y:gy+3, 'text-anchor':'end', 'font-size':'8', fill:'#000000'});
+      yl.textContent = g.toFixed(1); svg.appendChild(yl);
     }
-    return {tp:tp,fp:fp,fn:fn,tn:tn};
-  }
 
-  function metricsFrom(c){
-    var tp=c.tp, fp=c.fp, fn=c.fn, tn=c.tn;
-    var recall = (tp+fn)>0 ? tp/(tp+fn) : 0;
-    var precision = (tp+fp)>0 ? tp/(tp+fp) : 0;
-    var accuracy = (tp+fp+fn+tn)>0 ? (tp+tn)/(tp+fp+fn+tn) : 0;
-    var f1 = (precision+recall)>0 ? 2*precision*recall/(precision+recall) : 0;
-    var fpr = (fp+tn)>0 ? fp/(fp+tn) : 0;
-    return {recall:recall, precision:precision, accuracy:accuracy, f1:f1, fpr:fpr};
-  }
+    svg.appendChild(el('line', {x1:padL, y1:padT, x2:padL, y2:padT+plotH, stroke:'#000000', 'stroke-width':1}));
+    svg.appendChild(el('line', {x1:padL, y1:padT+plotH, x2:padL+plotW, y2:padT+plotH, stroke:'#000000', 'stroke-width':1}));
 
-  function trapArea(pts, xKey, yKey){
-    var area=0;
-    for (var i=1;i<pts.length;i++){
-      var a=pts[i-1], b=pts[i];
-      area += (b[xKey]-a[xKey]) * (a[yKey]+b[yKey]) / 2;
-    }
-    return area;
-  }
+    const pts = rocCurvePoints();
+    const path = pts.map((p,i)=>{
+      const x = padL + p[0]*plotW, y = padT + (1-p[1])*plotH;
+      return (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    svg.appendChild(el('path', {d:path, stroke:'#a200ff', 'stroke-width':2, fill:'none'}));
 
-  // sweep tau from 1 -> 0, building the ROC + PR points and their areas in one pass
-  function computeSweep(data){
-    var steps = 300;
-    var pts = [];
-    for (var i=0;i<=steps;i++){
-      var t = 1 - i/steps;
-      var c = confusionAt(data, t);
-      var recall = (c.tp+c.fn)>0 ? c.tp/(c.tp+c.fn) : 0;
-      var fpr = (c.fp+c.tn)>0 ? c.fp/(c.fp+c.tn) : 0;
-      // convention: when nothing is predicted positive yet, precision starts at 1
-      // so the PR curve begins cleanly at (recall 0, precision 1)
-      var precisionCurve = (c.tp+c.fp)>0 ? c.tp/(c.tp+c.fp) : 1;
-      pts.push({fpr:fpr, tpr:recall, recall:recall, precisionCurve:precisionCurve});
-    }
-    var posCount = data.filter(function(d){ return d.y===1; }).length;
-    return {
-      points: pts,
-      auc: trapArea(pts, 'fpr', 'tpr'),
-      ap: trapArea(pts, 'recall', 'precisionCurve'),
-      posRate: posCount / data.length
+    rocCache = {
+      circle: el('circle', {r:7, fill:'#ff1493', stroke:'#ffffff', 'stroke-width':1.5}),
+      coordText: el('text', {'font-size': '8.5', 'font-weight': '700', fill: '#ff1493', 'pointer-events': 'none'})
     };
+    svg.appendChild(rocCache.circle);
+    svg.appendChild(rocCache.coordText);
+
+    const xt = el('text', {x:padL+plotW/2, y:H-2, 'text-anchor':'middle', 'font-size':'10', fill:'#000000'});
+    xt.textContent = 'FPR'; svg.appendChild(xt);
+    const yt = el('text', {x:10, y:padT+plotH/2, 'text-anchor':'middle', 'font-size':'10', fill:'#000000', transform:`rotate(-90 10 ${padT+plotH/2})`});
+    yt.textContent = 'TPR'; svg.appendChild(yt);
   }
 
-  var SWEEP = { balanced: computeSweep(DATA_SETS.balanced), imbalanced: computeSweep(DATA_SETS.imbalanced) };
+  // อัปเดตเฉพาะตำแหน่งจุด ไม่ลบวาดใหม่
+  const {fpr, tpr} = tprfpr;
+  const cx = padL + fpr*plotW, cy = padT + (1-tpr)*plotH;
+  rocCache.circle.setAttribute('cx', cx);
+  rocCache.circle.setAttribute('cy', cy);
 
-  var currentMode = 'balanced';
-  var DATA = DATA_SETS[currentMode];
+  let textAnchor = 'start';
+  let textX = cx + 10;
+  let textY = cy - 8;
 
-  // ================= DOM refs =================
-  var strip = document.getElementById('strip');
-  var blipLayer = document.getElementById('blipLayer');
-  var threshLine = document.getElementById('threshLine');
-  var slider = document.getElementById('slider');
-  var tauVal = document.getElementById('tauVal');
-  var syncNote = document.getElementById('syncNote');
-  var syncText = document.getElementById('syncText');
-  var stripCountEl = document.getElementById('stripCount');
-  var modeToggle = document.getElementById('modeToggle');
-  var modeBtns = Array.prototype.slice.call(modeToggle.querySelectorAll('.mode-btn'));
-  var modeDescEl = document.getElementById('modeDesc');
-  var modeCountEl = document.getElementById('modeCount');
-  var rocSvg = document.getElementById('rocSvg');
-  var prSvg = document.getElementById('prSvg');
-  var aucValEl = document.getElementById('aucVal');
-  var apValEl = document.getElementById('apVal');
-  var rocCoordEl = document.getElementById('rocCoord');
-  var prCoordEl = document.getElementById('prCoord');
-  var insightText = document.getElementById('insightText');
+  if (fpr > 0.6) {
+    textAnchor = 'end';
+    textX = cx - 12;
+  }
+  if (tpr > 0.85) {
+    textY = cy + 16;
+  }
 
-  var blipEls = [];
-  var rocCtx = null, prCtx = null;
+  rocCache.coordText.setAttribute('x', textX);
+  rocCache.coordText.setAttribute('y', textY);
+  rocCache.coordText.setAttribute('text-anchor', textAnchor);
+  rocCache.coordText.textContent = `(FPR ${fpr.toFixed(2)}, TPR ${tpr.toFixed(2)})`;
+}
 
-  function rebuildStrip(){
-    var NBINS = 30, CAP = 16;
-    var bins = [];
-    for (var i=0;i<NBINS;i++) bins.push([]);
-    DATA.forEach(function(d, i){
-      var idx = Math.min(NBINS-1, Math.floor(d.p*NBINS));
-      bins[idx].push(i); // keep the original DATA index
+const multiColors = ['#00a86b','#d18b00','#8a2be2'];
+const multiData = rawData.slice(0, 90).map((d,i)=>{
+  const label=i%3, scores=[.08,.08,.08];
+  scores[label]=Math.min(.98,.56+((i*17)%38)/100);
+  scores[(label+1)%3]=.06+((i*7)%22)/100;
+  scores[(label+2)%3]=.04+((i*11)%18)/100;
+  return {label,scores};
+});
+function multiAuc(c){
+  const pts=[]; let pos=0,neg=0;
+  multiData.forEach(d=>d.label===c?pos++:neg++);
+  for(let i=0;i<=200;i++){const t=1-i/200;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t;if(p&&d.label===c)tp++;else if(p)fp++;});pts.push({x:fp/neg,y:tp/pos});}
+  let a=0;for(let i=1;i<pts.length;i++)a+=(pts[i].x-pts[i-1].x)*(pts[i].y+pts[i-1].y)/2;return a;
+}
+function multiAt(c,t){let tp=0,fp=0,fn=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;else if(y)fn++;});return {p:(tp+fp)?tp/(tp+fp):0,r:(tp+fn)?tp/(tp+fn):0};}
+function drawMulti(t){
+  const svg=document.getElementById('multiRocPlot'),W=400,H=220,L=34,T=12,PW=350,PH=175,ns='http://www.w3.org/2000/svg';svg.innerHTML='';
+  const e=(tag,a)=>{const n=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>n.setAttribute(k,v));return n;};
+  for(let g=0;g<=1;g+=.2){const x=L+g*PW,y=T+(1-g)*PH;svg.appendChild(e('line',{x1:x,y1:T,x2:x,y2:T+PH,stroke:'#e2e5eb'}));svg.appendChild(e('line',{x1:L,y1:y,x2:L+PW,y2:y,stroke:'#e2e5eb'}));}
+  svg.appendChild(e('line',{x1:L,y1:T+PH,x2:L+PW,y2:T,stroke:'#999','stroke-dasharray':'3,3'}));let aucs=[];
+  for(let c=0;c<3;c++){const auc=multiAuc(c);aucs.push(auc);let pts=[];for(let i=0;i<=200;i++){const t0=1-i/200;let tp=0,fp=0,pos=0,neg=0;multiData.forEach(d=>{const y=d.label===c,p=d.scores[c]>=t0;if(y)pos++;else neg++;if(p&&y)tp++;else if(p)fp++;});pts.push([fp/neg,tp/pos]);}const d=pts.map((p,i)=>(i?'L':'M')+(L+p[0]*PW)+' '+(T+(1-p[1])*PH)).join(' ');svg.appendChild(e('path',{d,fill:'none',stroke:multiColors[c],'stroke-width':2}));const y0=multiData.filter(d=>d.label===c).length, n0=multiData.length-y0;let tp=0,fp=0;multiData.forEach(d=>{const p=d.scores[c]>=t,y=d.label===c;if(p&&y)tp++;else if(p)fp++;});svg.appendChild(e('circle',{cx:L+(fp/n0)*PW,cy:T+(1-tp/y0)*PH,r:4,fill:multiColors[c]}));}
+  const axis= e('text',{x:W/2,y:H-2,'text-anchor':'middle',fill:'#000','font-size':10});axis.textContent='FPR →';svg.appendChild(axis);
+  document.getElementById('multiRows').innerHTML=aucs.map((a,c)=>{const m=multiAt(c,t);return `<tr><td style="color:${multiColors[c]}">Class ${c+1}</td><td>${a.toFixed(3)}</td><td>${(m.p*100).toFixed(1)}%</td><td>${(m.r*100).toFixed(1)}%</td></tr>`;}).join('');
+}
+
+function updateMathFormulas(threshold, m){
+  const {TP, FP, TN, FN, acc, prec, tpr, fpr, f1} = m;
+  const totalPos = TP + FN;
+  const totalNeg = FP + TN;
+  const totalPredPos = TP + FP;
+  const totalSamples = TP + FP + TN + FN;
+  const totalCorrect = TP + TN;
+
+  const thEl = document.getElementById('mathThVal');
+  if (thEl) thEl.textContent = threshold.toFixed(4);
+  const hdrTp = document.getElementById('m_hdr_tp');
+  if (hdrTp) {
+    hdrTp.textContent = TP;
+    document.getElementById('m_hdr_fp').textContent = FP;
+    document.getElementById('m_hdr_tn').textContent = TN;
+    document.getElementById('m_hdr_fn').textContent = FN;
+  }
+
+  // 1. TPR
+  document.getElementById('m_tpr_tp').textContent = TP;
+  document.getElementById('m_tpr_tp2').textContent = TP;
+  document.getElementById('m_tpr_fn').textContent = FN;
+  document.getElementById('m_tpr_tp3').textContent = TP;
+  document.getElementById('m_tpr_pos').textContent = totalPos;
+  document.getElementById('m_tpr_dec').textContent = tpr.toFixed(4);
+  document.getElementById('m_tpr_pct').textContent = `(${(tpr * 100).toFixed(1)}%)`;
+  document.getElementById('m_tpr_desc').innerHTML = `ตรวจจับคนลาออกจริงได้ <b class="c-tp">${TP}</b> คน จากคนลาออกจริงทั้งหมด <b>${totalPos}</b> คน`;
+
+  // 2. FPR
+  document.getElementById('m_fpr_fp').textContent = FP;
+  document.getElementById('m_fpr_fp2').textContent = FP;
+  document.getElementById('m_fpr_tn').textContent = TN;
+  document.getElementById('m_fpr_fp3').textContent = FP;
+  document.getElementById('m_fpr_neg').textContent = totalNeg;
+  document.getElementById('m_fpr_dec').textContent = fpr.toFixed(4);
+  document.getElementById('m_fpr_pct').textContent = `(${(fpr * 100).toFixed(1)}%)`;
+  document.getElementById('m_fpr_desc').innerHTML = `ทายผิดว่าลาออก <b class="c-fp">${FP}</b> คน จากคนที่ไม่ลาออกจริงทั้งหมด <b>${totalNeg}</b> คน`;
+
+  // 3. Ordered Pair (FPR, TPR)
+  document.getElementById('m_pair_fp').textContent = FP;
+  document.getElementById('m_pair_neg').textContent = totalNeg;
+  document.getElementById('m_pair_tp').textContent = TP;
+  document.getElementById('m_pair_pos').textContent = totalPos;
+  document.getElementById('m_pair_coord').textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  document.getElementById('m_pair_desc').innerHTML = `พิกัดจุด 2D บนกราฟ ROC: แกน X = <b class="c-fp">${fpr.toFixed(3)}</b>, แกน Y = <b class="c-tp">${tpr.toFixed(3)}</b>`;
+
+  // 4. Precision
+  document.getElementById('m_prec_tp').textContent = TP;
+  document.getElementById('m_prec_tp2').textContent = TP;
+  document.getElementById('m_prec_fp').textContent = FP;
+  document.getElementById('m_prec_tp3').textContent = TP;
+  document.getElementById('m_prec_predpos').textContent = totalPredPos;
+  document.getElementById('m_prec_dec').textContent = prec.toFixed(4);
+  document.getElementById('m_prec_pct').textContent = `(${(prec * 100).toFixed(1)}%)`;
+  document.getElementById('m_prec_desc').innerHTML = `ทายว่าลาออกทั้งหมด <b>${totalPredPos}</b> คน เป็นคนที่ลาออกจริง <b class="c-tp">${TP}</b> คน`;
+
+  // 5. Accuracy
+  document.getElementById('m_acc_tp').textContent = TP;
+  document.getElementById('m_acc_tn').textContent = TN;
+  document.getElementById('m_acc_tot').textContent = totalSamples;
+  document.getElementById('m_acc_correct').textContent = totalCorrect;
+  document.getElementById('m_acc_tot2').textContent = totalSamples;
+  document.getElementById('m_acc_dec').textContent = acc.toFixed(4);
+  document.getElementById('m_acc_pct').textContent = `(${(acc * 100).toFixed(1)}%)`;
+  document.getElementById('m_acc_desc').innerHTML = `ทายถูกทั้งหมด <b class="c-tp">${totalCorrect}</b> คน (TP + TN) จากทั้งหมด <b>${totalSamples}</b> คน`;
+
+  // 6. F1-Score
+  document.getElementById('m_f1_prec').textContent = prec.toFixed(4);
+  document.getElementById('m_f1_tpr').textContent = tpr.toFixed(4);
+  document.getElementById('m_f1_prec2').textContent = prec.toFixed(4);
+  document.getElementById('m_f1_tpr2').textContent = tpr.toFixed(4);
+  const f1Num = (2 * prec * tpr).toFixed(4);
+  const f1Denom = (prec + tpr).toFixed(4);
+  document.getElementById('m_f1_num').textContent = f1Num;
+  document.getElementById('m_f1_denom').textContent = f1Denom;
+  document.getElementById('m_f1_dec').textContent = f1.toFixed(4);
+  document.getElementById('m_f1_desc').innerHTML = `ค่าเฉลี่ยฮาร์โมนิกเพื่อถ่วงดุล Precision (<b>${(prec*100).toFixed(1)}%</b>) และ Recall (<b>${(tpr*100).toFixed(1)}%</b>)`;
+}
+
+function update(){
+  const t = parseFloat(slider.value);
+  thVal.textContent = t.toFixed(4);
+  slider.style.setProperty('--pct', (t*100)+'%');
+  drawDotPlot(t);
+  const metrics = drawConfusionMatrix(t);
+  drawRocPoint(t, metrics);
+  drawMulti(t);
+  updateMathFormulas(t, metrics);
+  highlightTableRow(t);
+}
+
+// ใช้ requestAnimationFrame ช่วยควบคุมให้การอัปเดตสัมพันธ์กับรีเฟรชเรทจอ ป้องกันกระตุก
+let updateReqId = null;
+function requestUpdate() {
+  if (!updateReqId) {
+    updateReqId = requestAnimationFrame(() => {
+      update();
+      updateReqId = null;
     });
-    blipLayer.innerHTML = '';
-    blipEls = new Array(DATA.length);
-    bins.forEach(function(idxArr){
-      var col = document.createElement('div');
-      col.className = 'blip-col';
-      var shownCount = idxArr.length > CAP ? CAP - 1 : idxArr.length;
-      var hidden = idxArr.length - shownCount;
-      idxArr.forEach(function(dataIdx, pos){
-        var el = document.createElement('div');
-        el.className = 'blip';
-        if (pos >= shownCount) el.classList.add('blip-hidden'); // still updatable, just not shown
-        col.appendChild(el);
-        blipEls[dataIdx] = el;
-      });
-      if (hidden > 0){
-        var more = document.createElement('div');
-        more.className = 'overflow-label';
-        more.textContent = '+' + hidden;
-        col.appendChild(more);
+  }
+}
+
+const slider = document.getElementById('thSlider');
+const thVal = document.getElementById('thVal');
+slider.addEventListener('input', requestUpdate);
+
+window.addEventListener('resize', () => {
+  // เมื่อย่อขยายจอ ต้องรีเซ็ต Cache ให้วาดใหม่ให้พอดีขนาด
+  dpCache = null;
+  rocCache = null;
+  requestUpdate();
+});
+
+const rocSvg = document.getElementById('rocPlot');
+let isDraggingRoc = false;
+
+function handleRocPointer(e) {
+  if (!isDraggingRoc && e.type !== 'pointerdown') return;
+  
+  if (e.type === 'pointerdown') {
+    isDraggingRoc = true;
+    rocSvg.setPointerCapture(e.pointerId); 
+  }
+  
+  if (e.type === 'pointerup' || e.type === 'pointercancel') {
+    isDraggingRoc = false;
+    rocSvg.releasePointerCapture(e.pointerId);
+    return;
+  }
+
+  const rect = rocSvg.getBoundingClientRect();
+  const scaleX = 200 / rect.width;
+  const scaleY = 200 / rect.height;
+  const svgX = (e.clientX - rect.left) * scaleX;
+  const svgY = (e.clientY - rect.top) * scaleY;
+
+  const padL = 34, padT = 26, plotW = 156, plotH = 144; 
+  const targetFpr = (svgX - padL) / plotW;
+  const targetTpr = 1 - (svgY - padT) / plotH;
+
+  const pts = rocCurvePoints();
+  let bestDist = Infinity;
+  let bestT = slider.value;
+  
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const dx = p[0] - targetFpr;
+    const dy = p[1] - targetTpr;
+    const dist = (dx * dx) + (dy * dy);
+    
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestT = p[2];
+    }
+  }
+
+  slider.value = bestT;
+  requestUpdate();
+}
+
+rocSvg.addEventListener('pointerdown', handleRocPointer);
+rocSvg.addEventListener('pointermove', handleRocPointer);
+rocSvg.addEventListener('pointerup', handleRocPointer);
+rocSvg.addEventListener('pointercancel', handleRocPointer);
+
+// ================= Table & Ordered Pairs (FPR, TPR) =================
+const tableDataCache = {};
+let currentTableMode = 'step';
+
+function getTablePoints(mode){
+  if (tableDataCache[mode]) return tableDataCache[mode];
+  if (mode === 'step') {
+    const pts = [];
+    for (let i = 20; i >= 0; i--) {
+      const t = +(i * 0.05).toFixed(2);
+      const {TP, FP, TN, FN} = computeCounts(t);
+      const tpr = (TP + FN) ? TP / (TP + FN) : 0;
+      const fpr = (FP + TN) ? FP / (FP + TN) : 0;
+      pts.push({ threshold: t, TP, FP, TN, FN, tpr, fpr });
+    }
+    tableDataCache.step = pts;
+    return pts;
+  }
+  if (mode === 'cutoffs') {
+    const sorted = [...rawData].sort((a,b) => b.score - a.score);
+    const cutoffs = [1.0001];
+    sorted.forEach(d => cutoffs.push(d.score));
+    cutoffs.push(0.0);
+    let lastTpr = -1, lastFpr = -1;
+    const pts = [];
+    cutoffs.forEach(t => {
+      const {TP, FP, TN, FN} = computeCounts(t);
+      const tpr = (TP + FN) ? TP / (TP + FN) : 0;
+      const fpr = (FP + TN) ? FP / (FP + TN) : 0;
+      if (Math.abs(tpr - lastTpr) > 0.0001 || Math.abs(fpr - lastFpr) > 0.0001) {
+        pts.push({ threshold: t, TP, FP, TN, FN, tpr, fpr });
+        lastTpr = tpr;
+        lastFpr = fpr;
       }
-      blipLayer.appendChild(col);
     });
-    stripCountEl.textContent = DATA.length;
+    tableDataCache.cutoffs = pts;
+    return pts;
   }
-
-  // generic builder shared by the ROC and PR svg panels
-  function buildSvgCurve(svgEl, pts, cfg){
-    var W=300,H=240,padL=30,padB=26,padT=10,padR=10;
-    var plotW = W-padL-padR, plotH = H-padT-padB;
-    function X(v){ return padL + v*plotW; }
-    function Y(v){ return padT + (1-v)*plotH; }
-
-    svgEl.innerHTML = '';
-    var ns = 'http://www.w3.org/2000/svg';
-    function el(tag, attrs){
-      var e = document.createElementNS(ns, tag);
-      for (var k in attrs) e.setAttribute(k, attrs[k]);
-      return e;
-    }
-
-    // grid
-    for (var g=0; g<=4; g++){
-      var gx = padL + g/4*plotW, gy = padT + g/4*plotH;
-      svgEl.appendChild(el('line',{x1:gx,y1:padT,x2:gx,y2:padT+plotH,stroke:'#152036','stroke-width':1}));
-      svgEl.appendChild(el('line',{x1:padL,y1:gy,x2:padL+plotW,y2:gy,stroke:'#152036','stroke-width':1}));
-    }
-
-    // baseline: diagonal for ROC, horizontal "positive rate" line for PR
-    if (cfg.baseline === 'diagonal'){
-      svgEl.appendChild(el('line',{x1:X(0),y1:Y(0),x2:X(1),y2:Y(1),stroke:'#334467','stroke-width':1,'stroke-dasharray':'3,3'}));
-    } else {
-      var by = Y(cfg.baseline);
-      svgEl.appendChild(el('line',{x1:X(0),y1:by,x2:X(1),y2:by,stroke:'#334467','stroke-width':1,'stroke-dasharray':'3,3'}));
-    }
-
-    // shaded area under the curve
-    var areaD = 'M ' + X(pts[0][cfg.xKey]) + ' ' + Y(0);
-    pts.forEach(function(p){ areaD += ' L ' + X(p[cfg.xKey]) + ' ' + Y(p[cfg.yKey]); });
-    areaD += ' L ' + X(pts[pts.length-1][cfg.xKey]) + ' ' + Y(0) + ' Z';
-    svgEl.appendChild(el('path',{d:areaD, fill:cfg.color, opacity:'0.16', stroke:'none'}));
-
-    // curve line
-    var lineD = 'M ' + X(pts[0][cfg.xKey]) + ' ' + Y(pts[0][cfg.yKey]);
-    for (var i=1;i<pts.length;i++){ lineD += ' L ' + X(pts[i][cfg.xKey]) + ' ' + Y(pts[i][cfg.yKey]); }
-    svgEl.appendChild(el('path',{d:lineD, fill:'none', stroke:cfg.color, 'stroke-width':2}));
-
-    // axis labels
-    var lx = el('text', {x:padL+plotW/2, y:H-4, 'text-anchor':'middle', class:'roc-axis-label'});
-    lx.textContent = cfg.axisX;
-    svgEl.appendChild(lx);
-    var ly = el('text', {x:10, y:padT+plotH/2, 'text-anchor':'middle', class:'roc-axis-label', transform:'rotate(-90 10 '+(padT+plotH/2)+')'});
-    ly.textContent = cfg.axisY;
-    svgEl.appendChild(ly);
-
-    // moving marker (current threshold)
-    var marker = el('circle', {cx:X(pts[0][cfg.xKey]), cy:Y(pts[0][cfg.yKey]), r:5, fill:'#FBBF24', stroke:'#0A0F1A','stroke-width':1.5});
-    svgEl.appendChild(marker);
-
-    return {X:X, Y:Y, marker:marker};
-  }
-
-  // Static illustration for the AUC panel: NOT tied to the slider at all.
-  // Points are grouped into bins by score and stacked as a little bar per bin,
-  // colored/shaped only by their TRUE label (no prediction/threshold involved) —
-  // this is the point: AUC is about the overall ranking, not any one cut point.
-  var truthStripEl = document.getElementById('truthStrip');
-  function buildTruthStrip(data){
-    var NBINS = 25, CAP = 16;
-    var bins = [];
-    for (var i=0;i<NBINS;i++) bins.push([]);
-    data.forEach(function(d){
-      var idx = Math.min(NBINS-1, Math.floor(d.p*NBINS));
-      bins[idx].push(d);
+  if (mode === 'all') {
+    const scores = [...new Set(rawData.map(d => d.score))].sort((a,b) => b - a);
+    const cutoffs = [1.0001, ...scores, 0.0];
+    const pts = cutoffs.map(t => {
+      const {TP, FP, TN, FN} = computeCounts(t);
+      const tpr = (TP + FN) ? TP / (TP + FN) : 0;
+      const fpr = (FP + TN) ? FP / (FP + TN) : 0;
+      return { threshold: t, TP, FP, TN, FN, tpr, fpr };
     });
-    truthStripEl.innerHTML = '';
-    bins.forEach(function(items){
-      var col = document.createElement('div');
-      col.className = 'truth-col';
-      var shown = items.length > CAP ? items.slice(0, CAP-1) : items;
-      var hidden = items.length - shown.length;
-      shown.forEach(function(d){
-        var b = document.createElement('div');
-        b.className = 'truth-blip ' + (d.y===1 ? 'pos' : 'neg');
-        if (d.y===1) b.textContent = '✕';
-        col.appendChild(b);
-      });
-      if (hidden > 0){
-        var more = document.createElement('div');
-        more.className = 'overflow-label';
-        more.textContent = '+' + hidden;
-        col.appendChild(more);
-      }
-      truthStripEl.appendChild(col);
-    });
+    tableDataCache.all = pts;
+    return pts;
   }
+}
 
-  function rebuildCurves(){
-    var sw = SWEEP[currentMode];
-    rocCtx = buildSvgCurve(rocSvg, sw.points, {xKey:'fpr', yKey:'tpr', color:'#34D399', axisX:'FPR →', axisY:'TPR →', baseline:'diagonal'});
-    prCtx = buildSvgCurve(prSvg, sw.points, {xKey:'recall', yKey:'precisionCurve', color:'#60A5FA', axisX:'Recall →', axisY:'Precision →', baseline: sw.posRate});
-    aucValEl.textContent = sw.auc.toFixed(3);
-    apValEl.textContent = sw.ap.toFixed(3);
-    buildTruthStrip(DATA);
-  }
-
-  function updateModeUI(){
-    modeBtns.forEach(function(b){
-      var active = b.dataset.mode === currentMode;
-      b.classList.toggle('active', active);
-      b.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-    var posCount = DATA.filter(function(d){ return d.y===1; }).length;
-    var pct = (posCount/DATA.length*100);
-    modeCountEl.textContent = DATA.length;
-    modeDescEl.innerHTML = 'ชุดข้อมูลตอนนี้: <b>' + DATA.length + '</b> จุดตรวจจับ · เป้าหมายจริง <b>' + posCount + '</b> จุด (' + pct.toFixed(1) + '%)';
-  }
-
-  function updateInsight(m){
-    var sw = SWEEP[currentMode];
-    if (currentMode === 'balanced'){
-      insightText.innerHTML = 'ตอนนี้ข้อมูล<b>สมดุล</b> (บวก≈ลบ) เส้น ROC (AUC <b>' + sw.auc.toFixed(3) + '</b>) กับเส้น Precision-Recall (PR-AUC <b>' + sw.ap.toFixed(3) + '</b>) เล่าเรื่องไปในทิศทางเดียวกัน ลองกดสลับไปที่ "ข้อมูลเบ้สูง" ด้านบน แล้วดูว่าเกิดอะไรขึ้น!';
-    } else {
-      insightText.innerHTML = 'ตอนนี้ข้อมูล<b>เบ้สูง</b> (เป้าหมายจริงมีแค่ ~1%) เส้น ROC ยังโชว์ AUC สูงถึง <b>' + sw.auc.toFixed(3) + '</b> เพราะ FPR คำนวณเทียบกับฐานลบที่มีเยอะมาก แต่ PR-AUC เหลือเพียง <b>' + sw.ap.toFixed(3) + '</b> — ที่เกณฑ์ปัจจุบัน Precision อยู่ที่แค่ <b>' + m.precision.toFixed(3) + '</b> แปลว่าถ้าเราแจ้งเตือนตามนี้ ส่วนใหญ่จะเป็น "เตือนหลอก" ไม่ใช่เป้าหมายจริง นี่คือเหตุผลที่ควรดู PR-Curve คู่กับ ROC เสมอเมื่อข้อมูลเบ้';
-    }
-  }
-
-  // ================= multi-class demo (shared threshold) =================
-  var MULTI_COLORS = ['#34D399','#FBBF24','#C084FC'];
-  var MULTI_DATA = [];
-  for (var mi=0; mi<30; mi++){
-    var mc = mi % 3, scores = [0.12,0.12,0.12];
-    scores[mc] = 0.58 + ((mi * 17) % 35) / 100;
-    scores[(mc+1)%3] = 0.08 + ((mi * 7) % 24) / 100;
-    scores[(mc+2)%3] = 0.05 + ((mi * 11) % 20) / 100;
-    MULTI_DATA.push({label:mc, scores:scores});
-  }
-  function multiCurve(classId){
-    var pts=[], pos=0, neg=0;
-    MULTI_DATA.forEach(function(d){ if(d.label===classId) pos++; else neg++; });
-    for(var i=0;i<=200;i++){
-      var t=1-i/200,tp=0,fp=0;
-      MULTI_DATA.forEach(function(d){ var pred=d.scores[classId]>=t; if(pred&&d.label===classId)tp++; else if(pred)fp++; });
-      pts.push({fpr:neg?fp/neg:0,tpr:pos?tp/pos:0});
-    }
-    return {points:pts,auc:trapArea(pts,'fpr','tpr'),pos:pos,neg:neg};
-  }
-  function multiAt(classId,tau){
-    var tp=0,fp=0,fn=0,tn=0;
-    MULTI_DATA.forEach(function(d){var p=d.scores[classId]>=tau,y=d.label===classId;if(p&&y)tp++;else if(p)fp++;else if(y)fn++;else tn++;});
-    var precision=(tp+fp)?tp/(tp+fp):0, recall=(tp+fn)?tp/(tp+fn):0;
-    return {precision:precision,recall:recall,fpr:(fp+tn)?fp/(fp+tn):0};
-  }
-  function microAuc(){
-    var flat=[]; MULTI_DATA.forEach(function(d){for(var c=0;c<3;c++)flat.push({s:d.scores[c],y:d.label===c?1:0});});
-    var pos=flat.filter(function(d){return d.y;}).length,neg=flat.length-pos,pts=[];
-    for(var i=0;i<=200;i++){var t=1-i/200,tp=0,fp=0;flat.forEach(function(d){var p=d.s>=t;if(p&&d.y)tp++;else if(p)fp++;});pts.push({fpr:fp/neg,tpr:tp/pos});}
-    return trapArea(pts,'fpr','tpr');
-  }
-  function drawMulti(tau){
-    var svg=document.getElementById('multiRocSvg'); if(!svg)return;
-    var W=300,H=240,pL=34,pR=12,pT=18,pB=30,pW=W-pL-pR,pH=H-pT-pB;
-    svg.innerHTML=''; var ns='http://www.w3.org/2000/svg';
-    function el(tag,a){var n=document.createElementNS(ns,tag);Object.keys(a).forEach(function(k){n.setAttribute(k,a[k]);});return n;}
-    for(var g=0;g<=1;g+=.2){var x=pL+g*pW,y=pT+(1-g)*pH;svg.appendChild(el('line',{x1:x,y1:pT,x2:x,y2:pT+pH,stroke:'#152036','stroke-width':1}));svg.appendChild(el('line',{x1:pL,y1:y,x2:pL+pW,y2:y,stroke:'#152036','stroke-width':1}));}
-    svg.appendChild(el('line',{x1:pL,y1:pT+pH,x2:pL+pW,y2:pT,stroke:'#334467','stroke-dasharray':'3,3'}));
-    var aucs=[];
-    for(var c=0;c<3;c++){
-      var sw=multiCurve(c); aucs.push(sw.auc); var d=sw.points.map(function(pt,i){return (i?'L':'M')+(pL+pt.fpr*pW)+' '+(pT+(1-pt.tpr)*pH);}).join(' ');
-      svg.appendChild(el('path',{d:d,fill:'none',stroke:MULTI_COLORS[c],'stroke-width':2}));
-      var m=multiAt(c,tau); svg.appendChild(el('circle',{cx:pL+m.fpr*pW,cy:pT+(1-m.recall)*pH,r:4,fill:MULTI_COLORS[c],stroke:'#0A0F1A','stroke-width':1}));
-    }
-    svg.appendChild(el('text',{x:W/2,y:H-5,'text-anchor':'middle',fill:'#7C8AA5','font-size':10})).textContent='FPR →';
-    svg.appendChild(el('text',{x:10,y:H/2,fill:'#7C8AA5','font-size':10,transform:'rotate(-90 10 '+H/2+')'})).textContent='TPR →';
-    document.getElementById('multiMacroAuc').textContent=(aucs.reduce(function(a,b){return a+b;},0)/3).toFixed(3);
-    document.getElementById('multiMicroAuc').textContent=microAuc().toFixed(3);
-    document.getElementById('multiRows').innerHTML=aucs.map(function(a,c){var m=multiAt(c,tau);return '<tr><td style="color:'+MULTI_COLORS[c]+'">Class '+(c+1)+'</td><td>'+a.toFixed(3)+'</td><td>'+(m.precision*100).toFixed(1)+'%</td><td>'+(m.recall*100).toFixed(1)+'%</td></tr>';}).join('');
-  }
-
-  // ================= render at a given tau =================
-  var currentTau = 0.5;
-  function render(tau, animateLine){
-    currentTau = tau;
-    tauVal.textContent = tau.toFixed(3);
-    slider.value = tau;
-    threshLine.style.transition = animateLine ? 'left .5s cubic-bezier(.2,.7,.3,1)' : 'left .12s linear';
-    threshLine.style.left = (tau*100) + '%';
-
-    var c = confusionAt(DATA, tau);
-    var m = metricsFrom(c);
-
-    document.getElementById('cTP').textContent = c.tp;
-    document.getElementById('cFP').textContent = c.fp;
-    document.getElementById('cFN').textContent = c.fn;
-    document.getElementById('cTN').textContent = c.tn;
-    document.getElementById('mRecall').textContent = (m.recall*100).toFixed(1) + '%';
-    document.getElementById('mAcc').textContent = (m.accuracy*100).toFixed(1) + '%';
-    document.getElementById('mPrec').textContent = (m.precision*100).toFixed(1) + '%';
-    document.getElementById('mF1').textContent = (m.f1*100).toFixed(1) + '%';
-
-    // dot = ความจริงคือ "ไม่ใช่", กากบาท = ความจริงคือ "ใช่"
-    // สีฟ้า = โมเดลทำนายว่า "ใช่" ณ เกณฑ์นี้, สีเทา = โมเดลทำนายว่า "ไม่ใช่"
-    DATA.forEach(function(d, i){
-      var predPos = d.p >= tau;
-      var shape = d.y===1 ? 'cross' : 'dot';
-      var colorCls = predPos ? 'pred-pos' : 'pred-neg';
-      var el = blipEls[i];
-      var wasHidden = el.classList.contains('blip-hidden');
-      el.className = 'blip ' + shape + ' ' + colorCls + (wasHidden ? ' blip-hidden' : '');
-      el.textContent = shape === 'cross' ? '✕' : '';
-    });
-
-    // two-tone slider track: เทา = โซนทำนาย "ไม่ใช่", ฟ้า = โซนทำนาย "ใช่"
-    var pct = (tau*100).toFixed(1);
-    slider.style.background = 'linear-gradient(to right, var(--neg) 0%, var(--neg) ' + pct + '%, var(--pr) ' + pct + '%, var(--pr) 100%)';
-
-    if (rocCtx){
-      rocCtx.marker.setAttribute('cx', rocCtx.X(m.fpr));
-      rocCtx.marker.setAttribute('cy', rocCtx.Y(m.recall));
-    }
-    if (prCtx){
-      prCtx.marker.setAttribute('cx', prCtx.X(m.recall));
-      prCtx.marker.setAttribute('cy', prCtx.Y(m.precision));
-    }
-    rocCoordEl.textContent = '(FPR ' + m.fpr.toFixed(2) + ', TPR ' + m.recall.toFixed(2) + ')';
-    prCoordEl.textContent = '(Recall ' + m.recall.toFixed(2) + ', Precision ' + m.precision.toFixed(2) + ')';
-
-    updateInsight(m);
-    drawMulti(tau);
-  }
-
-  function switchMode(mode){
-    if (mode === currentMode || !DATA_SETS[mode]) return;
-    currentMode = mode;
-    DATA = DATA_SETS[mode];
-    rebuildStrip();
-    rebuildCurves();
-    updateModeUI();
-    render(currentTau, false);
-    writeShared(currentTau, currentMode);
-  }
-
-  modeBtns.forEach(function(btn){
-    btn.addEventListener('click', function(){ switchMode(btn.dataset.mode); });
+function renderTable(mode){
+  currentTableMode = mode;
+  const pts = getTablePoints(mode);
+  const tbody = document.getElementById('rocTableBody');
+  const countSpan = document.getElementById('tablePointCount');
+  if (countSpan) countSpan.textContent = pts.length;
+  if (!tbody) return;
+  
+  let html = '';
+  pts.forEach((p, idx) => {
+    const thStr = p.threshold > 1 ? '> max (1.0)' : p.threshold.toFixed(4);
+    html += `<tr data-idx="${idx}" data-t="${p.threshold}" onclick="selectThreshold(${p.threshold})">
+      <td style="color:var(--muted);">${idx + 1}</td>
+      <td style="font-weight:700;">${thStr}</td>
+      <td style="color:var(--pos); font-weight:600;">${p.TP}</td>
+      <td style="color:var(--neg); font-weight:600;">${p.FP}</td>
+      <td style="color:var(--pos); font-weight:600;">${p.TN}</td>
+      <td style="color:var(--neg); font-weight:600;">${p.FN}</td>
+      <td>${p.fpr.toFixed(4)}</td>
+      <td>${p.tpr.toFixed(4)}</td>
+      <td style="text-align:center;"><span class="pair-badge">(${p.fpr.toFixed(3)}, ${p.tpr.toFixed(3)})</span></td>
+      <td style="text-align:center;"><button type="button" class="select-btn">เลือก</button></td>
+    </tr>`;
   });
+  tbody.innerHTML = html;
+  lastActiveRow = null;
+  highlightTableRow(parseFloat(slider.value));
+}
 
-  // initial build
-  rebuildStrip();
-  rebuildCurves();
-  updateModeUI();
-  render(0.5, false);
-
-  // ---- shared persistence across visitors ----
-  var STORE_KEY = 'threshold-console-state';
-  var lastWriteTs = 0;
-  var isDragging = false;
-  var writeTimer = null;
-
-  function setSyncState(label, stale){
-    syncText.textContent = label;
-    syncNote.classList.toggle('stale', !!stale);
-  }
-
-  async function writeShared(tau, mode){
-    var ts = Date.now();
-    lastWriteTs = ts;
-    try{
-      await window.storage.set(STORE_KEY, JSON.stringify({tau:tau, mode:mode, ts:ts}), true);
-      setSyncState('ซิงค์แล้ว', false);
-    }catch(e){
-      setSyncState('บันทึกไม่สำเร็จ', true);
+let lastActiveRow = null;
+function highlightTableRow(t){
+  const pts = getTablePoints(currentTableMode);
+  if (!pts || !pts.length) return;
+  
+  let bestIdx = 0;
+  let bestDiff = Math.abs(pts[0].threshold - t);
+  for (let i = 1; i < pts.length; i++) {
+    const diff = Math.abs(pts[i].threshold - t);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
     }
   }
-
-  async function readShared(){
-    try{
-      var res = await window.storage.get(STORE_KEY, true);
-      if (res && res.value) return JSON.parse(res.value);
-    }catch(e){ /* key not set yet, or offline */ }
-    return null;
+  
+  const tbody = document.getElementById('rocTableBody');
+  if (!tbody) return;
+  const rows = tbody.children;
+  if (lastActiveRow && lastActiveRow !== rows[bestIdx]) {
+    lastActiveRow.classList.remove('active-row');
   }
+  if (rows[bestIdx]) {
+    rows[bestIdx].classList.add('active-row');
+    lastActiveRow = rows[bestIdx];
+  }
+}
 
-  slider.addEventListener('input', function(){
-    isDragging = true;
-    var tau = parseFloat(slider.value);
-    render(tau, false);
-    if (writeTimer) clearTimeout(writeTimer);
-    writeTimer = setTimeout(function(){ writeShared(tau, currentMode); }, 220);
+function selectThreshold(t){
+  const validT = Math.max(0, Math.min(1, t));
+  slider.value = validT;
+  requestUpdate();
+}
+
+function switchTableTab(mode){
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
   });
-  ['change','mouseup','touchend'].forEach(function(evt){
-    slider.addEventListener(evt, function(){
-      isDragging = false;
-      writeShared(parseFloat(slider.value), currentMode);
-    });
-  });
+  renderTable(mode);
+}
 
-  (async function init(){
-    var state = await readShared();
-    if (state && typeof state.tau === 'number'){
-      lastWriteTs = state.ts || 0;
-      if (state.mode && state.mode !== currentMode && DATA_SETS[state.mode]){
-        currentMode = state.mode;
-        DATA = DATA_SETS[currentMode];
-        rebuildStrip();
-        rebuildCurves();
-        updateModeUI();
-      }
-      render(state.tau, false);
-    } else {
-      await writeShared(currentTau, currentMode);
-    }
-  })();
+function scrollToActiveRow(){
+  const activeRow = document.querySelector('#rocTableBody tr.active-row');
+  if (activeRow) {
+    activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
 
-  setInterval(async function(){
-    if (isDragging) return;
-    var state = await readShared();
-    if (!state) return;
-    if (state.ts > lastWriteTs){
-      var changed = false;
-      if (state.mode && state.mode !== currentMode && DATA_SETS[state.mode]){
-        currentMode = state.mode;
-        DATA = DATA_SETS[currentMode];
-        rebuildStrip();
-        rebuildCurves();
-        updateModeUI();
-        changed = true;
-      }
-      if (typeof state.tau === 'number' && Math.abs(state.tau - currentTau) > 0.001){
-        changed = true;
-      }
-      if (changed){
-        lastWriteTs = state.ts;
-        setSyncState('มีคนขยับ…', false);
-        render(state.tau, true);
-        setTimeout(function(){ setSyncState('ซิงค์แล้ว', false); }, 1200);
-      }
-    }
-  }, 2200);
-
-})();
+renderTable('step');
+update();
 </script>
 </body>
 </html>
