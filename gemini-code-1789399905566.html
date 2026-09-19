@@ -127,6 +127,30 @@
   .select-btn:hover{background:#a200ff;color:#fff;}
   .active-row .select-btn{background:#a200ff;color:#fff;}
 
+  .math-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+  .math-card h2{font-size:16px;margin:0;font-weight:700;}
+  .math-card p{font-size:12px;margin:4px 0 12px;color:var(--muted);line-height:1.45;}
+  .math-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media (max-width:768px){.math-grid{grid-template-columns:1fr;}}
+  .math-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;}
+  .math-box.highlight{background:#faf5ff;border-color:#d8b4fe;}
+  .math-box-title{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+  .math-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-family:'IBM Plex Mono','Cascadia Code',Consolas,monospace;font-size:13px;font-variant-numeric:tabular-nums;margin:6px 0;}
+  .math-sym{font-weight:700;}
+  .math-op{color:var(--muted);font-size:13px;padding:0 1px;}
+  .math-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 2px;}
+  .math-frac .num{border-bottom:1.5px solid var(--ink);padding:0 4px 1px;text-align:center;width:100%;}
+  .math-frac .denom{padding:1px 4px 0;text-align:center;width:100%;}
+  .math-result{font-weight:800;font-size:14px;color:var(--ink);}
+  .math-pct{font-size:11px;color:var(--muted);font-weight:600;}
+  .math-desc{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;}
+  .math-desc b{color:var(--ink);}
+  .c-tp{color:var(--pos);font-weight:700;}
+  .c-tn{color:var(--pos);font-weight:700;}
+  .c-fp{color:var(--neg);font-weight:700;}
+  .c-fn{color:var(--neg);font-weight:700;}
+  .c-coord{color:#7e22ce;font-weight:800;}
+
   .multi-card{flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}.multi-card h2{font-size:15px;margin:0 0 5px}.multi-card p{font-size:12px;margin:0 0 8px;color:var(--muted)}.multi-card svg{width:100%;height:260px;display:block}.multi-table{width:100%;border-collapse:collapse;font-size:12px}.multi-table th,.multi-table td{padding:8px;border-bottom:1px solid var(--border);text-align:right}.multi-table th:first-child,.multi-table td:first-child{text-align:left}.row>*{min-width:0;overflow:hidden}.roc-card,.cm-card{min-width:0}.roc-card svg{min-width:0}
   body{max-width:1100px;margin:0 auto;padding:20px 24px 32px}.head{margin-bottom:14px}.head h1{font-size:22px}.head p{font-size:14px}.thresh-bar{padding:16px 18px;margin-bottom:14px}.thresh-top label{font-size:14px}.thresh-val{font-size:22px}.dotplot-wrap{flex:0 0 280px;padding:12px 14px 6px;margin-bottom:14px}.legend{font-size:12px;gap:14px}.row{gap:14px;margin-bottom:14px;min-height:280px}.cm-card,.roc-card{height:280px;border-radius:14px;padding:12px}.cm-title,.metrics-title{font-size:14px}.cm-sub{font-size:10px}.cm-colhead,.cm-rowhead{font-size:9px}.quad .code{font-size:10px}.quad .n{font-size:22px}.quad .l{font-size:9px}.metrics{gap:10px;grid-template-columns:repeat(6,1fr);margin-bottom:14px;}.metric{padding:10px 4px}.metric .lbl{font-size:11px}.metric .def{font-size:8px;min-height:20px}.metric .val{font-size:22px}
   @media (max-width:850px){.metrics{grid-template-columns:repeat(3,1fr);}}
@@ -238,6 +262,199 @@
     </div>
   </div>
 
+  <div class="math-card">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+      <h2>สูตรคำนวณคณิตศาสตร์แบบแทนค่าตัวเลขจริง (Live Math Substitution)</h2>
+      <div class="current-pair-badge">
+        เกณฑ์ τ = <span id="mathThVal">0.5000</span> (TP=<b class="c-tp" id="m_hdr_tp">-</b>, FP=<b class="c-fp" id="m_hdr_fp">-</b>, TN=<b class="c-tn" id="m_hdr_tn">-</b>, FN=<b class="c-fn" id="m_hdr_fn">-</b>)
+      </div>
+    </div>
+    <p>
+      อิงจากการเลื่อน Threshold ด้านบน ค่า <b>TP, FP, TN, FN</b> จะเปลี่ยนไป และสูตรคณิตศาสตร์ด้านล่างจะนำตัวเลขจริงทั้งหมดมาแทนค่าและคำนวณให้เห็นเป็นขั้นตอนแบบเรียลไทม์
+    </p>
+
+    <div class="math-grid">
+      <!-- 1. TPR -->
+      <div class="math-box highlight">
+        <div class="math-box-title">
+          <span>1. TPR (True Positive Rate / Recall / Sensitivity)</span>
+          <span style="color:#7e22ce; font-size:11px;">แกน Y บนกราฟ ROC</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">TPR</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp">TP</span></span>
+            <span class="denom"><span class="c-tp">TP</span> + <span class="c-fn">FN</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_tpr_tp">0</span></span>
+            <span class="denom"><span class="c-tp" id="m_tpr_tp2">0</span> + <span class="c-fn" id="m_tpr_fn">0</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_tpr_tp3">0</span></span>
+            <span class="denom" id="m_tpr_pos">47</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result c-tp" id="m_tpr_dec">0.0000</span>
+          <span class="math-pct" id="m_tpr_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_tpr_desc">คำนวณสัดส่วนคนลาออกจริงที่โมเดลจับได้ถูกต้อง</div>
+      </div>
+
+      <!-- 2. FPR -->
+      <div class="math-box highlight">
+        <div class="math-box-title">
+          <span>2. FPR (False Positive Rate / Fall-out)</span>
+          <span style="color:#7e22ce; font-size:11px;">แกน X บนกราฟ ROC</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">FPR</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp">FP</span></span>
+            <span class="denom"><span class="c-fp">FP</span> + <span class="c-tn">TN</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp" id="m_fpr_fp">0</span></span>
+            <span class="denom"><span class="c-fp" id="m_fpr_fp2">0</span> + <span class="c-tn" id="m_fpr_tn">0</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp" id="m_fpr_fp3">0</span></span>
+            <span class="denom" id="m_fpr_neg">247</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result c-fp" id="m_fpr_dec">0.0000</span>
+          <span class="math-pct" id="m_fpr_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_fpr_desc">คำนวณสัดส่วนคนไม่ลาออกแต่โมเดลทายผิดว่าลาออก</div>
+      </div>
+
+      <!-- 3. Ordered Pair (FPR, TPR) -->
+      <div class="math-box highlight">
+        <div class="math-box-title">
+          <span>3. คู่อันดับพิกัดฉาก 2 มิติ (FPR, TPR)</span>
+          <span style="color:#7e22ce; font-size:11px;">พล็อตจุดบน ROC Curve</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">(x, y)</span>
+          <span class="math-op">=</span>
+          <span style="font-weight:600;">(FPR, TPR)</span>
+          <span class="math-op">=</span>
+          <span>(</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-fp" id="m_pair_fp">0</span></span>
+            <span class="denom" id="m_pair_neg">247</span>
+          </span>
+          <span>,</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_pair_tp">0</span></span>
+            <span class="denom" id="m_pair_pos">47</span>
+          </span>
+          <span>)</span>
+          <span class="math-op">=</span>
+          <span class="math-result c-coord" id="m_pair_coord">(0.000, 0.000)</span>
+        </div>
+        <div class="math-desc" id="m_pair_desc">พิกัดจุด 2D บนกราฟ ROC: แกน X = FPR, แกน Y = TPR</div>
+      </div>
+
+      <!-- 4. Precision -->
+      <div class="math-box">
+        <div class="math-box-title">
+          <span>4. Precision (ความแม่นยำของการทายว่าลาออก)</span>
+          <span style="color:var(--muted); font-size:11px;">TP / (TP + FP)</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">Prec</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp">TP</span></span>
+            <span class="denom"><span class="c-tp">TP</span> + <span class="c-fp">FP</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_prec_tp">0</span></span>
+            <span class="denom"><span class="c-tp" id="m_prec_tp2">0</span> + <span class="c-fp" id="m_prec_fp">0</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_prec_tp3">0</span></span>
+            <span class="denom" id="m_prec_predpos">0</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result" id="m_prec_dec">0.0000</span>
+          <span class="math-pct" id="m_prec_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_prec_desc">ในกลุ่มคนที่ทำนายว่าลาออกทั้งหมด ถูกต้องจริงกี่คน</div>
+      </div>
+
+      <!-- 5. Accuracy -->
+      <div class="math-box">
+        <div class="math-box-title">
+          <span>5. Accuracy (ความถูกต้องโดยรวมทั้งหมด)</span>
+          <span style="color:var(--muted); font-size:11px;">(TP + TN) / Total</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">Acc</span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp">TP</span> + <span class="c-tn">TN</span></span>
+            <span class="denom">TP + TN + FP + FN</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num"><span class="c-tp" id="m_acc_tp">0</span> + <span class="c-tn" id="m_acc_tn">0</span></span>
+            <span class="denom" id="m_acc_tot">294</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num" id="m_acc_correct">0</span>
+            <span class="denom" id="m_acc_tot2">294</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result" id="m_acc_dec">0.0000</span>
+          <span class="math-pct" id="m_acc_pct">(0.0%)</span>
+        </div>
+        <div class="math-desc" id="m_acc_desc">ทายถูกทั้งหมด (TP + TN) เทียบกับตัวอย่างทั้งหมด 294 รายการ</div>
+      </div>
+
+      <!-- 6. F1-Score -->
+      <div class="math-box">
+        <div class="math-box-title">
+          <span>6. F1-Score (ค่าเฉลี่ยฮาร์โมนิก Precision & Recall)</span>
+          <span style="color:var(--muted); font-size:11px;">2·(P·R)/(P+R)</span>
+        </div>
+        <div class="math-row">
+          <span class="math-sym">F1</span>
+          <span class="math-op">=</span>
+          <span class="math-op">2 ×</span>
+          <span class="math-frac">
+            <span class="num">Prec × Recall</span>
+            <span class="denom">Prec + Recall</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-op">2 ×</span>
+          <span class="math-frac">
+            <span class="num"><span id="m_f1_prec">0.00</span> × <span id="m_f1_tpr">0.00</span></span>
+            <span class="denom"><span id="m_f1_prec2">0.00</span> + <span id="m_f1_tpr2">0.00</span></span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-frac">
+            <span class="num" id="m_f1_num">0.0000</span>
+            <span class="denom" id="m_f1_denom">0.0000</span>
+          </span>
+          <span class="math-op">=</span>
+          <span class="math-result" id="m_f1_dec">0.0000</span>
+        </div>
+        <div class="math-desc" id="m_f1_desc">สมดุลระหว่างความแม่นยำ Precision และความครอบคลุม Recall</div>
+      </div>
+    </div>
+  </div>
+
   <div class="table-card">
     <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
       <h2>ตารางแจกแจงค่าและคู่อันดับ (FPR, TPR) สำหรับ ROC Curve</h2>
@@ -248,18 +465,6 @@
     <p>
       เส้นโค้ง ROC เกิดจากการนำ <b>คู่อันดับ (FPR, TPR)</b> ที่ระดับ Threshold ต่าง ๆ มาพล็อตลงบนแกนพิกัดฉาก โดยแกน X คือ <b>FPR</b> (อัตราผลบวกลวง) และแกน Y คือ <b>TPR</b> (อัตราผลบวกจริง หรือ Recall) คลิกที่แถวเพื่อเปลี่ยนเกณฑ์ไปยังจุดนั้น
     </p>
-
-    <div class="formula-box">
-      <div class="formula-item">
-        <b style="color:#7e22ce;">FPR (แกน X):</b> <code>FP / (FP + TN)</code> = สัดส่วนที่ทายว่าลาออกผิดจากคนที่ไม่ลาออกจริง
-      </div>
-      <div class="formula-item">
-        <b style="color:#7e22ce;">TPR / Recall (แกน Y):</b> <code>TP / (TP + FN)</code> = สัดส่วนที่จับคนลาออกจริงได้ถูกต้อง
-      </div>
-      <div class="formula-item">
-        <b style="color:#7e22ce;">คู่อันดับพิกัด:</b> <code>(x, y) = (FPR, TPR)</code> จุดบนระนาบ 2 มิติ (0,0) → (1,1)
-      </div>
-    </div>
 
     <div class="table-controls">
       <div class="tab-btn-group">
@@ -545,6 +750,85 @@ function drawMulti(t){
   document.getElementById('multiRows').innerHTML=aucs.map((a,c)=>{const m=multiAt(c,t);return `<tr><td style="color:${multiColors[c]}">Class ${c+1}</td><td>${a.toFixed(3)}</td><td>${(m.p*100).toFixed(1)}%</td><td>${(m.r*100).toFixed(1)}%</td></tr>`;}).join('');
 }
 
+function updateMathFormulas(threshold, m){
+  const {TP, FP, TN, FN, acc, prec, tpr, fpr, f1} = m;
+  const totalPos = TP + FN;
+  const totalNeg = FP + TN;
+  const totalPredPos = TP + FP;
+  const totalSamples = TP + FP + TN + FN;
+  const totalCorrect = TP + TN;
+
+  const thEl = document.getElementById('mathThVal');
+  if (thEl) thEl.textContent = threshold.toFixed(4);
+  const hdrTp = document.getElementById('m_hdr_tp');
+  if (hdrTp) {
+    hdrTp.textContent = TP;
+    document.getElementById('m_hdr_fp').textContent = FP;
+    document.getElementById('m_hdr_tn').textContent = TN;
+    document.getElementById('m_hdr_fn').textContent = FN;
+  }
+
+  // 1. TPR
+  document.getElementById('m_tpr_tp').textContent = TP;
+  document.getElementById('m_tpr_tp2').textContent = TP;
+  document.getElementById('m_tpr_fn').textContent = FN;
+  document.getElementById('m_tpr_tp3').textContent = TP;
+  document.getElementById('m_tpr_pos').textContent = totalPos;
+  document.getElementById('m_tpr_dec').textContent = tpr.toFixed(4);
+  document.getElementById('m_tpr_pct').textContent = `(${(tpr * 100).toFixed(1)}%)`;
+  document.getElementById('m_tpr_desc').innerHTML = `ตรวจจับคนลาออกจริงได้ <b class="c-tp">${TP}</b> คน จากคนลาออกจริงทั้งหมด <b>${totalPos}</b> คน`;
+
+  // 2. FPR
+  document.getElementById('m_fpr_fp').textContent = FP;
+  document.getElementById('m_fpr_fp2').textContent = FP;
+  document.getElementById('m_fpr_tn').textContent = TN;
+  document.getElementById('m_fpr_fp3').textContent = FP;
+  document.getElementById('m_fpr_neg').textContent = totalNeg;
+  document.getElementById('m_fpr_dec').textContent = fpr.toFixed(4);
+  document.getElementById('m_fpr_pct').textContent = `(${(fpr * 100).toFixed(1)}%)`;
+  document.getElementById('m_fpr_desc').innerHTML = `ทายผิดว่าลาออก <b class="c-fp">${FP}</b> คน จากคนที่ไม่ลาออกจริงทั้งหมด <b>${totalNeg}</b> คน`;
+
+  // 3. Ordered Pair (FPR, TPR)
+  document.getElementById('m_pair_fp').textContent = FP;
+  document.getElementById('m_pair_neg').textContent = totalNeg;
+  document.getElementById('m_pair_tp').textContent = TP;
+  document.getElementById('m_pair_pos').textContent = totalPos;
+  document.getElementById('m_pair_coord').textContent = `(${fpr.toFixed(3)}, ${tpr.toFixed(3)})`;
+  document.getElementById('m_pair_desc').innerHTML = `พิกัดจุด 2D บนกราฟ ROC: แกน X = <b class="c-fp">${fpr.toFixed(3)}</b>, แกน Y = <b class="c-tp">${tpr.toFixed(3)}</b>`;
+
+  // 4. Precision
+  document.getElementById('m_prec_tp').textContent = TP;
+  document.getElementById('m_prec_tp2').textContent = TP;
+  document.getElementById('m_prec_fp').textContent = FP;
+  document.getElementById('m_prec_tp3').textContent = TP;
+  document.getElementById('m_prec_predpos').textContent = totalPredPos;
+  document.getElementById('m_prec_dec').textContent = prec.toFixed(4);
+  document.getElementById('m_prec_pct').textContent = `(${(prec * 100).toFixed(1)}%)`;
+  document.getElementById('m_prec_desc').innerHTML = `ทายว่าลาออกทั้งหมด <b>${totalPredPos}</b> คน เป็นคนที่ลาออกจริง <b class="c-tp">${TP}</b> คน`;
+
+  // 5. Accuracy
+  document.getElementById('m_acc_tp').textContent = TP;
+  document.getElementById('m_acc_tn').textContent = TN;
+  document.getElementById('m_acc_tot').textContent = totalSamples;
+  document.getElementById('m_acc_correct').textContent = totalCorrect;
+  document.getElementById('m_acc_tot2').textContent = totalSamples;
+  document.getElementById('m_acc_dec').textContent = acc.toFixed(4);
+  document.getElementById('m_acc_pct').textContent = `(${(acc * 100).toFixed(1)}%)`;
+  document.getElementById('m_acc_desc').innerHTML = `ทายถูกทั้งหมด <b class="c-tp">${totalCorrect}</b> คน (TP + TN) จากทั้งหมด <b>${totalSamples}</b> คน`;
+
+  // 6. F1-Score
+  document.getElementById('m_f1_prec').textContent = prec.toFixed(4);
+  document.getElementById('m_f1_tpr').textContent = tpr.toFixed(4);
+  document.getElementById('m_f1_prec2').textContent = prec.toFixed(4);
+  document.getElementById('m_f1_tpr2').textContent = tpr.toFixed(4);
+  const f1Num = (2 * prec * tpr).toFixed(4);
+  const f1Denom = (prec + tpr).toFixed(4);
+  document.getElementById('m_f1_num').textContent = f1Num;
+  document.getElementById('m_f1_denom').textContent = f1Denom;
+  document.getElementById('m_f1_dec').textContent = f1.toFixed(4);
+  document.getElementById('m_f1_desc').innerHTML = `ค่าเฉลี่ยฮาร์โมนิกเพื่อถ่วงดุล Precision (<b>${(prec*100).toFixed(1)}%</b>) และ Recall (<b>${(tpr*100).toFixed(1)}%</b>)`;
+}
+
 function update(){
   const t = parseFloat(slider.value);
   thVal.textContent = t.toFixed(4);
@@ -553,6 +837,7 @@ function update(){
   const metrics = drawConfusionMatrix(t);
   drawRocPoint(t, metrics);
   drawMulti(t);
+  updateMathFormulas(t, metrics);
   highlightTableRow(t);
 }
 
